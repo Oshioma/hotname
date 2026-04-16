@@ -4,6 +4,7 @@ import { redirect } from "next/navigation";
 import { z } from "zod";
 import { createClient } from "@/lib/supabase/server";
 import { validateReturnTo } from "@/lib/auth/return-to";
+import { verifyTurnstile } from "@/lib/auth/turnstile";
 
 // ---------------------------------------------------------------------------
 // Shared types
@@ -69,7 +70,11 @@ export async function signInWithPassword(
   _prevState: ActionState | null,
   formData: FormData
 ): Promise<ActionState> {
-  // TODO: Enforce Cloudflare Turnstile verification before proceeding.
+  try {
+    await verifyTurnstile(formData.get("cf-turnstile-response") as string | null);
+  } catch (e) {
+    return { error: e instanceof Error ? e.message : "Verification failed." };
+  }
 
   const raw = {
     email: formData.get("email") as string,
@@ -103,7 +108,11 @@ export async function signUpWithPassword(
   _prevState: ActionState | null,
   formData: FormData
 ): Promise<ActionState> {
-  // TODO: Enforce Cloudflare Turnstile verification before proceeding.
+  try {
+    await verifyTurnstile(formData.get("cf-turnstile-response") as string | null);
+  } catch (e) {
+    return { error: e instanceof Error ? e.message : "Verification failed." };
+  }
 
   const raw = {
     fullName: formData.get("fullName") as string,
@@ -155,7 +164,11 @@ export async function sendPasswordReset(
   _prevState: ActionState | null,
   formData: FormData
 ): Promise<ActionState> {
-  // TODO: Enforce Cloudflare Turnstile verification before proceeding.
+  try {
+    await verifyTurnstile(formData.get("cf-turnstile-response") as string | null);
+  } catch (e) {
+    return { error: e instanceof Error ? e.message : "Verification failed." };
+  }
 
   const raw = {
     email: formData.get("email") as string,

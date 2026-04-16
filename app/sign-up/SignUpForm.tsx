@@ -2,6 +2,7 @@
 
 import { useActionState } from "react";
 import Link from "next/link";
+import Script from "next/script";
 import { signUpWithPassword, type ActionState } from "@/lib/auth/actions";
 import { buildAuthQuery } from "@/lib/auth/return-to";
 
@@ -95,6 +96,11 @@ export function SignUpForm({ app, returnTo }: SignUpFormProps) {
         )}
       </div>
 
+      <div
+        className="cf-turnstile"
+        data-sitekey={process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY ?? ""}
+      />
+
       <button type="submit" disabled={isPending} className="btn btn-primary">
         {isPending ? "Creating account…" : "Create account"}
       </button>
@@ -103,6 +109,10 @@ export function SignUpForm({ app, returnTo }: SignUpFormProps) {
         Already have an account?{" "}
         <Link href={`/sign-in${authQuery}`}>Sign in</Link>
       </p>
+      <Script
+        src="https://challenges.cloudflare.com/turnstile/v0/api.js"
+        strategy="lazyOnload"
+      />
     </form>
   );
 }
