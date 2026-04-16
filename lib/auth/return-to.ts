@@ -1,50 +1,76 @@
-const DEFAULT_URL =
-  process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
+// lib/auth/return-to.ts
 
-/**
- * Returns the list of allowed return-to origins from the environment.
- * Each entry is compared at the origin level to prevent path-based bypasses.
- */
-function getAllowedOrigins(): string[] {
-  const raw = process.env.AUTH_ALLOWED_RETURN_TO ?? "";
+const DEFAULT_FALLBACK = process.env.NEXT_PUBLIC_SITE_URL || "/";
+
+function normalizeOrigin(value: string): string {
+  try {
+    const url = new URL(value);
+    return url.origin.toLowerCase();
+  } catch {
+    return "";
+  }
+}
+
+function normalizeUrl(value: string): string {
+  try {
+    const url = new URL(value);
+    url.hash = "";
+    // Remove trailing slash except for root
+    if (url.pathname.length > 1 && url.pathname.endsWith("/")) {
+      url.pathname = url.pathname.slice(0, -1);
+    }
+    return url.toString();
+  } catch {
+    return "";
+  }
+}
+
+function getAllowedReturnToList(): string[] {
+  const raw = process.env.AUTH_ALLOWED_RETURN_TO || "";
   return raw
     .split(",")
-    .map((s) => s.trim())
+    .map((item) => item.trim())
+    .filter(Boolean)
+    .map(normalizeUrl)
     .filter(Boolean);
+}
+
+export function getSafeFallbackUrl(): string {
+  const normalized = normalizeUrl(DEFAULT_FALLBACK);
+  return normalized || "/";
 }
 
 /**
  * Validates a returnTo URL against the allowlist of permitted origins.
  * Only http/https URLs whose origin matches an allowlisted entry are accepted.
- * Returns the URL if valid, or DEFAULT_URL as a safe fallback.
+ * Returns the URL if valid, or the safe fallback URL.
  *
  * This is the single source of truth for open-redirect prevention.
  */
-export function validateReturnTo(returnTo: string | null | undefined): string {
-  if (!returnTo) return DEFAULT_URL;
+export function getValidatedReturnTo(
+  returnTo: string | null | undefined
+): string {
+  if (!returnTo) return getSafeFallbackUrl();
 
   let url: URL;
   try {
     url = new URL(returnTo);
   } catch {
-    return DEFAULT_URL;
+    return getSafeFallbackUrl();
   }
 
   // Only allow standard web protocols
   if (url.protocol !== "http:" && url.protocol !== "https:") {
-    return DEFAULT_URL;
+    return getSafeFallbackUrl();
   }
 
-  const allowed = getAllowedOrigins();
-  const isAllowed = allowed.some((allowedUrl) => {
-    try {
-      return url.origin === new URL(allowedUrl).origin;
-    } catch {
-      return false;
-    }
-  });
+  const allowed = getAllowedReturnToList();
+  const returnToOrigin = normalizeOrigin(returnTo);
+  const isAllowed = allowed.some(
+    (allowedUrl) => normalizeOrigin(allowedUrl) === returnToOrigin
+  );
 
-  return isAllowed ? returnTo : DEFAULT_URL;
+  return isAllowed ? returnTo : getSafeFallbackUrl();
 }
 
 /**
@@ -66,28 +92,35 @@ export function buildAuthQuery(
 }
 
 /**
- * Extracts app and returnTo from URLSearchParams or a plain object.
+ * Extracts app and returnTo from a URL object or an object with a searchParams
+ * property (such as a Next.js page's awaited searchParams).
  * Always returns typed nulls, never undefined.
  */
-export function parseAuthParams(
-  searchParams:
-    | URLSearchParams
-    | { app?: string | string[]; returnTo?: string | string[] }
+export function parseAuthContext(
+  input:
+    | URL
+    | {
+        searchParams?:
+          | URLSearchParams
+          | Record<string, string | string[] | undefined>;
+      }
 ): { app: string | null; returnTo: string | null } {
-  if (searchParams instanceof URLSearchParams) {
-    return {
-      app: searchParams.get("app"),
-      returnTo: searchParams.get("returnTo"),
-    };
+  let sp: URLSearchParams;
+
+  if (input instanceof URL) {
+    sp = input.searchParams;
+  } else if (input.searchParams instanceof URLSearchParams) {
+    sp = input.searchParams;
+  } else {
+    sp = new URLSearchParams();
+    for (const [key, val] of Object.entries(input.searchParams ?? {})) {
+      const v = Array.isArray(val) ? val[0] : val;
+      if (typeof v === "string") sp.set(key, v);
+    }
   }
 
-  const app = searchParams.app;
-  const returnTo = searchParams.returnTo;
-
   return {
-    app: Array.isArray(app) ? app[0] ?? null : (app ?? null),
-    returnTo: Array.isArray(returnTo)
-      ? returnTo[0] ?? null
-      : (returnTo ?? null),
+    app: sp.get("app"),
+    returnTo: sp.get("returnTo"),
   };
 }

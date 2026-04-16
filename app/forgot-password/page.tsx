@@ -1,4 +1,4 @@
-import { parseAuthParams } from "@/lib/auth/return-to";
+import { parseAuthContext } from "@/lib/auth/return-to";
 import { ForgotPasswordForm } from "./ForgotPasswordForm";
 
 interface PageProps {
@@ -7,7 +7,7 @@ interface PageProps {
 
 export default async function ForgotPasswordPage({ searchParams }: PageProps) {
   const params = await searchParams;
-  const { app, returnTo } = parseAuthParams(params);
+  const { app, returnTo } = parseAuthContext({ searchParams: params });
 
   return (
     <main className="page">

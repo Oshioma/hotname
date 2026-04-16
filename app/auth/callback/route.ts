@@ -2,7 +2,7 @@ import { NextResponse, type NextRequest } from "next/server";
 import { createServerClient } from "@supabase/ssr";
 import type { CookieOptions } from "@supabase/ssr";
 import { cookies } from "next/headers";
-import { validateReturnTo, buildAuthQuery } from "@/lib/auth/return-to";
+import { getValidatedReturnTo, buildAuthQuery } from "@/lib/auth/return-to";
 
 /**
  * Handles the Supabase auth callback (PKCE code exchange).
@@ -72,6 +72,6 @@ export async function GET(request: NextRequest) {
   }
 
   // Standard auth (sign-in / sign-up) → validate returnTo then redirect
-  const safeReturnTo = validateReturnTo(returnTo);
+  const safeReturnTo = getValidatedReturnTo(returnTo);
   return NextResponse.redirect(safeReturnTo);
 }

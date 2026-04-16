@@ -3,7 +3,7 @@
 import { redirect } from "next/navigation";
 import { z } from "zod";
 import { createClient } from "@/lib/supabase/server";
-import { validateReturnTo } from "@/lib/auth/return-to";
+import { getValidatedReturnTo, getSafeFallbackUrl } from "@/lib/auth/return-to";
 import { verifyTurnstile } from "@/lib/auth/turnstile";
 
 // ---------------------------------------------------------------------------
@@ -52,6 +52,8 @@ const resetPasswordSchema = z
   .object({
     password: z.string().min(8, "Password must be at least 8 characters."),
     confirmPassword: z.string(),
+    app: z.string().optional(),
+    returnTo: z.string().optional(),
   })
   .refine((d) => d.password === d.confirmPassword, {
     message: "Passwords do not match.",
@@ -97,7 +99,7 @@ export async function signInWithPassword(
     return { error: "Invalid email or password." };
   }
 
-  redirect(validateReturnTo(returnTo));
+  redirect(getValidatedReturnTo(returnTo));
 }
 
 /**
@@ -133,7 +135,10 @@ export async function signUpWithPassword(
   const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
   const callbackUrl = new URL(`${siteUrl}/auth/callback`);
   if (app) callbackUrl.searchParams.set("app", app);
-  if (returnTo) callbackUrl.searchParams.set("returnTo", returnTo);
+  const safeReturnTo = returnTo ? getValidatedReturnTo(returnTo) : null;
+  if (safeReturnTo && safeReturnTo !== getSafeFallbackUrl()) {
+    callbackUrl.searchParams.set("returnTo", safeReturnTo);
+  }
 
   const supabase = await createClient();
   const { error } = await supabase.auth.signUp({
@@ -187,7 +192,10 @@ export async function sendPasswordReset(
   const callbackUrl = new URL(`${siteUrl}/auth/callback`);
   callbackUrl.searchParams.set("type", "recovery");
   if (app) callbackUrl.searchParams.set("app", app);
-  if (returnTo) callbackUrl.searchParams.set("returnTo", returnTo);
+  const safeReturnTo = returnTo ? getValidatedReturnTo(returnTo) : null;
+  if (safeReturnTo && safeReturnTo !== getSafeFallbackUrl()) {
+    callbackUrl.searchParams.set("returnTo", safeReturnTo);
+  }
 
   const supabase = await createClient();
   const { error } = await supabase.auth.resetPasswordForEmail(email, {
@@ -216,6 +224,8 @@ export async function updatePassword(
   const raw = {
     password: formData.get("password") as string,
     confirmPassword: formData.get("confirmPassword") as string,
+    app: (formData.get("app") as string) || undefined,
+    returnTo: (formData.get("returnTo") as string) || undefined,
   };
 
   const result = resetPasswordSchema.safeParse(raw);
@@ -232,7 +242,11 @@ export async function updatePassword(
     return { error: error.message };
   }
 
-  redirect("/security");
+  redirect(
+    result.data.returnTo
+      ? getValidatedReturnTo(result.data.returnTo)
+      : "/security"
+  );
 }
 
 /**
