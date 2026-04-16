@@ -3,7 +3,12 @@
 import { useActionState } from "react";
 import { updatePassword, type ActionState } from "@/lib/auth/actions";
 
-export function ResetPasswordForm() {
+interface ResetPasswordFormProps {
+  app: string | null;
+  returnTo: string | null;
+}
+
+export function ResetPasswordForm({ app, returnTo }: ResetPasswordFormProps) {
   const [state, action, isPending] = useActionState<ActionState | null, FormData>(
     updatePassword,
     null
@@ -11,6 +16,9 @@ export function ResetPasswordForm() {
 
   return (
     <form action={action} className="form">
+      <input type="hidden" name="app" value={app ?? ""} />
+      <input type="hidden" name="returnTo" value={returnTo ?? ""} />
+
       {state?.error && <p className="alert alert-error">{state.error}</p>}
 
       <div className="field">
