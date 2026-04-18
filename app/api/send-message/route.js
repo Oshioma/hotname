@@ -33,8 +33,8 @@ export async function POST(request) {
   if (body.trim().length > MAX_BODY) {
     return NextResponse.json({ error: `Message must be ${MAX_BODY} characters or fewer.` }, { status: 400 });
   }
-  if (!['sms', 'whatsapp', 'app'].includes(channel)) {
-    return NextResponse.json({ error: 'channel must be sms, whatsapp, or app.' }, { status: 400 });
+  if (!['sms', 'whatsapp', 'app', 'post'].includes(channel)) {
+    return NextResponse.json({ error: 'channel must be sms, whatsapp, app, or post.' }, { status: 400 });
   }
 
   const supabase = await createClient();
@@ -82,7 +82,7 @@ export async function POST(request) {
     recipient_username: recipient.username,
     body: trimmedBody,
     channel,
-    platform: channel === 'sms' ? 'SMS' : channel === 'whatsapp' ? 'WhatsApp' : 'App',
+    platform: channel === 'sms' ? 'SMS' : channel === 'whatsapp' ? 'WhatsApp' : channel === 'post' ? 'Post' : 'App',
   };
   if (thread_id) insert.thread_id = thread_id;
   if (parent_id) insert.parent_id = parent_id;

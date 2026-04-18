@@ -6,7 +6,7 @@ const META = {
   whatsapp: { label: 'WhatsApp', icon: '💬', desc: 'Receive messages via WhatsApp', needsPhone: true },
   sms:      { label: 'SMS',      icon: '📱', desc: 'Receive messages via SMS text', needsPhone: true },
   email:    { label: 'Email',    icon: '✉️',  desc: 'Receive messages via email',    needsPhone: false },
-  post:     { label: 'Post',     icon: '📮', desc: 'Receive physical letters',       needsPhone: false },
+  post:     { label: 'Post',     icon: '📮', desc: 'Receive letters — we print and mail them anonymously', needsPhone: false },
 };
 
 export default function ChannelCard({ channel, onRefresh }) {

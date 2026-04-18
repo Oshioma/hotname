@@ -66,11 +66,7 @@ export default async function BioPage({ params }) {
         .eq('allowed_username', viewerUsername)
         .maybeSingle();
       if (access) {
-        visibleChannels.push({
-          type: ch.type,
-          // Only expose postal address server-side to authorised viewers
-          postalAddress: ch.type === 'post' ? ch.value : undefined,
-        });
+        visibleChannels.push({ type: ch.type });
       }
     }
   }
@@ -97,18 +93,6 @@ export default async function BioPage({ params }) {
         <div className="bio-channels">
           {visibleChannels.map((ch) => {
             const meta = CH_META[ch.type];
-            if (ch.type === 'post' && ch.postalAddress) {
-              return (
-                <div key={ch.type} className="bio-postal-card">
-                  <span style={{ fontSize: '20px' }}>{meta.icon}</span>
-                  <div>
-                    <p style={{ fontWeight: 500, fontSize: '13px', marginBottom: '4px' }}>Send a letter</p>
-                    <p style={{ fontSize: '13px', color: '#ccc', whiteSpace: 'pre-line' }}>{ch.postalAddress}</p>
-                  </div>
-                </div>
-              );
-            }
-            if (ch.type === 'post') return null; // authorized but no address (shouldn't happen)
             return (
               <Link
                 key={ch.type}

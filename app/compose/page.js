@@ -5,9 +5,10 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 
 const CHANNELS = [
-  { id: 'app', label: 'In-App', desc: 'Stored in Hotname' },
-  { id: 'sms', label: 'SMS', desc: 'Sent to their phone' },
-  { id: 'whatsapp', label: 'WhatsApp', desc: 'Via WhatsApp' },
+  { id: 'app',      label: 'In-App',    desc: 'Stored in Hotname' },
+  { id: 'sms',      label: 'SMS',       desc: 'Sent to their phone' },
+  { id: 'whatsapp', label: 'WhatsApp',  desc: 'Via WhatsApp' },
+  { id: 'post',     label: 'Post',      desc: 'We print and mail it' },
 ];
 
 function ComposeForm() {
