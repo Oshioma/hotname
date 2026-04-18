@@ -18,19 +18,25 @@ export default function LoginPage() {
     const email = data.get('email');
     const password = data.get('password');
 
-    const res = await fetch('/api/auth', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ action: 'login', email, password }),
-    });
+    try {
+      const res = await fetch('/api/auth', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'login', email, password }),
+      });
 
-    const json = await res.json();
-    setLoading(false);
+      let json = {};
+      try { json = await res.json(); } catch { /* non-JSON response */ }
 
-    if (!res.ok) {
-      setError(json.error || 'Invalid email or password.');
-    } else {
-      router.push('/dashboard');
+      if (!res.ok) {
+        setError(json.error || 'Invalid email or password.');
+      } else {
+        router.push('/dashboard');
+      }
+    } catch {
+      setError('Network error. Please check your connection and try again.');
+    } finally {
+      setLoading(false);
     }
   }
 

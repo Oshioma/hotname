@@ -205,3 +205,61 @@ nav {
 .success-box .tick { font-size: 2.5rem; margin-bottom: 1rem; }
 .success-box h3 { font-size: 1.1rem; font-weight: 500; margin-bottom: 6px; }
 .success-box p { font-size: 13px; color: #888; }
+
+/* CHANNEL BADGES */
+.badge-sms { background: #1a3a1a; color: #22c55e; }
+.badge-whatsapp { background: #1a2e1a; color: #4ade80; }
+.badge-app { background: #ff5c3a22; color: #ff5c3a; }
+
+/* CONTACTS */
+.contacts-grid { display: flex; flex-wrap: wrap; gap: 8px; }
+.contact-chip {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: #1a1a1a;
+  border: 0.5px solid #2a2a2a;
+  border-radius: 10px;
+  padding: 10px 14px;
+  cursor: pointer;
+  text-decoration: none;
+  color: inherit;
+  transition: border-color 0.15s;
+  min-width: 160px;
+}
+.contact-chip:hover { border-color: #ff5c3a; }
+.contact-chip.favorite { border-color: #ff5c3a44; }
+.star { color: #ff5c3a; font-size: 16px; flex-shrink: 0; }
+.chip-name { font-size: 13px; font-weight: 500; }
+.chip-user { font-size: 11px; color: #666; margin-top: 2px; }
+
+.contacts-list { display: flex; flex-direction: column; gap: 8px; }
+.contact-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: #1a1a1a;
+  border: 0.5px solid #2a2a2a;
+  border-radius: 10px;
+  padding: 12px 14px;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+.contact-info { flex: 1; min-width: 120px; }
+.contact-actions { display: flex; align-items: center; gap: 6px; flex-shrink: 0; }
+
+.btn-star {
+  background: transparent;
+  border: none;
+  font-size: 18px;
+  cursor: pointer;
+  color: #555;
+  padding: 4px 6px;
+  border-radius: 6px;
+  transition: color 0.15s;
+  line-height: 1;
+}
+.btn-star:hover, .btn-star.active { color: #ff5c3a; }
+.btn-danger:hover { border-color: #ff4444; color: #ff4444; }
+
+.plat-tab.disabled { opacity: 0.35; cursor: not-allowed; }
