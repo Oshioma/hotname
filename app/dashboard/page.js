@@ -86,6 +86,7 @@ export default async function DashboardPage() {
             {shareUrl && (
               <div className="link-box" style={{ marginTop: '10px' }}>
                 <span>{shareUrl}</span>
+                <Link href={`/${username}`} target="_blank" style={{ marginLeft: '8px', color: '#ff5c3a', fontSize: '12px', textDecoration: 'underline', whiteSpace: 'nowrap' }}>View profile →</Link>
               </div>
             )}
           </div>
