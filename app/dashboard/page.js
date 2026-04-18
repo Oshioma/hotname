@@ -1,6 +1,7 @@
 import { redirect } from 'next/navigation';
 import Link from 'next/link';
 import { createClient } from '@/lib/supabase/server';
+import PhoneBanner from './PhoneBanner';
 
 const CH = { sms: 'SMS', whatsapp: 'WhatsApp', app: 'App' };
 
@@ -73,16 +74,18 @@ export default async function DashboardPage() {
       </nav>
 
       <div className="dash">
+        {/* Phone number nudge — shown at top when missing */}
+        {!profile?.phone_number && <PhoneBanner />}
+
         {/* Profile banner */}
         <div className="profile-banner">
           <div>
             <h3>{profile?.display_name || (username ? `@${username}` : user.email)}</h3>
             {username && <p style={{ color: '#ff5c3a', fontFamily: 'monospace', fontSize: '13px' }}>@{username}</p>}
             <p>{user.email}</p>
-            {profile?.phone_number
-              ? <p style={{ fontSize: '12px', color: '#666', marginTop: '4px' }}>{profile.phone_number} · SMS &amp; WhatsApp enabled</p>
-              : <p style={{ fontSize: '12px', color: '#ff5c3a', marginTop: '4px' }}>No phone — <Link href="/settings" style={{ color: '#ff5c3a', textDecoration: 'underline' }}>add one</Link> for SMS/WhatsApp</p>
-            }
+            {profile?.phone_number && (
+              <p style={{ fontSize: '12px', color: '#666', marginTop: '4px' }}>{profile.phone_number} · SMS &amp; WhatsApp enabled</p>
+            )}
             {shareUrl && (
               <>
                 <div className="link-box" style={{ marginTop: '10px' }}>

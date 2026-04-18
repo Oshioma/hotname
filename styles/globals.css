@@ -264,6 +264,21 @@ nav {
 
 .plat-tab.disabled { opacity: 0.35; cursor: not-allowed; }
 
+/* PHONE BANNER */
+.phone-banner {
+  background: #1a1a1a;
+  border: 0.5px solid #ff5c3a55;
+  border-radius: 12px;
+  margin-bottom: 1.2rem;
+}
+.phone-banner-inner {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 14px 16px;
+}
+.phone-banner-icon { font-size: 20px; flex-shrink: 0; margin-top: 1px; }
+
 /* REPLY BUTTON */
 .btn-reply {
   background: transparent;
