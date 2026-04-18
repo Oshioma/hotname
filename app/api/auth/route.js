@@ -16,6 +16,7 @@ export async function POST(request) {
   }
 
   const { action, email, password, username, display_name, phone_number } = body ?? {};
+  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? 'http://localhost:3000';
   const supabase = await createClient();
 
   // ── Sign out ──────────────────────────────────────────────────────────────
@@ -89,6 +90,30 @@ export async function POST(request) {
       }
     }
 
+    return NextResponse.json({ ok: true });
+  }
+
+  // ── Forgot password ───────────────────────────────────────────────────────
+  if (action === 'forgot-password') {
+    if (!email) {
+      return NextResponse.json({ error: 'Email is required.' }, { status: 400 });
+    }
+    // Always return ok — never reveal whether the email exists
+    await supabase.auth.resetPasswordForEmail(email, {
+      redirectTo: `${siteUrl}/auth/callback?next=/reset-password`,
+    });
+    return NextResponse.json({ ok: true });
+  }
+
+  // ── Update password (after reset link) ───────────────────────────────────
+  if (action === 'update-password') {
+    if (!password || password.length < 8) {
+      return NextResponse.json({ error: 'Password must be at least 8 characters.' }, { status: 400 });
+    }
+    const { error } = await supabase.auth.updateUser({ password });
+    if (error) {
+      return NextResponse.json({ error: error.message }, { status: 400 });
+    }
     return NextResponse.json({ ok: true });
   }
 

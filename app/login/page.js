@@ -69,6 +69,9 @@ export default function LoginPage() {
           </form>
 
           <p className="link-text">
+            <Link href="/forgot-password">Forgot your password?</Link>
+          </p>
+          <p className="link-text">
             No account? <Link href="/signup">Create one</Link>
           </p>
         </div>
