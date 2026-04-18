@@ -4,20 +4,12 @@ import { useActionState } from "react";
 import Link from "next/link";
 import Script from "next/script";
 import { signUpWithPassword, type ActionState } from "@/lib/auth/actions";
-import { buildAuthQuery } from "@/lib/auth/return-to";
 
-interface SignUpFormProps {
-  app: string | null;
-  returnTo: string | null;
-}
-
-export function SignUpForm({ app, returnTo }: SignUpFormProps) {
+export function SignUpForm() {
   const [state, action, isPending] = useActionState<ActionState | null, FormData>(
     signUpWithPassword,
     null
   );
-
-  const authQuery = buildAuthQuery(app, returnTo);
 
   if (state?.success) {
     return (
@@ -29,9 +21,6 @@ export function SignUpForm({ app, returnTo }: SignUpFormProps) {
 
   return (
     <form action={action} className="form">
-      <input type="hidden" name="app" value={app ?? ""} />
-      <input type="hidden" name="returnTo" value={returnTo ?? ""} />
-
       {state?.error && <p className="alert alert-error">{state.error}</p>}
 
       <div className="field">
@@ -107,7 +96,7 @@ export function SignUpForm({ app, returnTo }: SignUpFormProps) {
 
       <p className="form-footer">
         Already have an account?{" "}
-        <Link href={`/sign-in${authQuery}`}>Sign in</Link>
+        <Link href="/sign-in">Sign in</Link>
       </p>
       <Script
         src="https://challenges.cloudflare.com/turnstile/v0/api.js"
