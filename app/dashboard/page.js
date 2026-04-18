@@ -2,7 +2,7 @@ import { redirect } from 'next/navigation';
 import Link from 'next/link';
 import { createClient } from '@/lib/supabase/server';
 
-const CHANNEL_LABEL = { sms: 'SMS', whatsapp: 'WhatsApp', app: 'App' };
+const CH = { sms: 'SMS', whatsapp: 'WhatsApp', app: 'App' };
 
 export default async function DashboardPage() {
   const supabase = await createClient();
@@ -17,15 +17,21 @@ export default async function DashboardPage() {
 
   const username = profile?.username ?? null;
 
-  const [messagesResult, contactsResult] = await Promise.all([
+  const [inboxResult, sentResult, contactsResult] = await Promise.all([
     username
       ? supabase
           .from('messages')
-          .select('id, body, channel, platform, created_at, sender_id')
+          .select('id, thread_id, parent_id, body, channel, created_at, sender_id')
           .eq('recipient_username', username)
           .order('created_at', { ascending: false })
           .limit(30)
       : { data: [] },
+    supabase
+      .from('messages')
+      .select('id, thread_id, recipient_username, body, channel, created_at')
+      .eq('sender_id', user.id)
+      .order('created_at', { ascending: false })
+      .limit(30),
     supabase
       .from('contacts')
       .select('id, contact_username, is_favorite, profiles!contacts_contact_username_fkey(display_name)')
@@ -35,9 +41,18 @@ export default async function DashboardPage() {
       .limit(20),
   ]);
 
-  const messages = messagesResult.data ?? [];
+  const inbox = inboxResult.data ?? [];
+  const sent = sentResult.data ?? [];
   const contacts = contactsResult.data ?? [];
   const favorites = contacts.filter((c) => c.is_favorite);
+
+  // Deduplicate sent into unique threads for the conversations strip
+  const seenThreads = new Set();
+  const conversations = sent.filter((m) => {
+    if (seenThreads.has(m.thread_id)) return false;
+    seenThreads.add(m.thread_id);
+    return true;
+  });
 
   const shareUrl = username
     ? `${process.env.NEXT_PUBLIC_SITE_URL ?? 'http://localhost:3000'}/${username}`
@@ -66,7 +81,7 @@ export default async function DashboardPage() {
             <p>{user.email}</p>
             {profile?.phone_number
               ? <p style={{ fontSize: '12px', color: '#666', marginTop: '4px' }}>{profile.phone_number} · SMS &amp; WhatsApp enabled</p>
-              : <p style={{ fontSize: '12px', color: '#ff5c3a', marginTop: '4px' }}>No phone number — <Link href="/settings" style={{ color: '#ff5c3a', textDecoration: 'underline' }}>add one</Link> to receive SMS/WhatsApp</p>
+              : <p style={{ fontSize: '12px', color: '#ff5c3a', marginTop: '4px' }}>No phone — <Link href="/settings" style={{ color: '#ff5c3a', textDecoration: 'underline' }}>add one</Link> for SMS/WhatsApp</p>
             }
             {shareUrl && (
               <div className="link-box" style={{ marginTop: '10px' }}>
@@ -74,9 +89,7 @@ export default async function DashboardPage() {
               </div>
             )}
           </div>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', alignItems: 'flex-end' }}>
-            <Link href="/compose"><button className="btn-primary">Send a message</button></Link>
-          </div>
+          <Link href="/compose"><button className="btn-primary">Send a message</button></Link>
         </div>
 
         {/* Favorites */}
@@ -97,25 +110,56 @@ export default async function DashboardPage() {
           </>
         )}
 
-        {/* Message history */}
+        {/* Conversations (sent threads) */}
+        {conversations.length > 0 && (
+          <>
+            <h2>Conversations</h2>
+            <div className="conv-list" style={{ marginBottom: '1.5rem' }}>
+              {conversations.map((msg) => (
+                <Link key={msg.thread_id} href={`/reply/${msg.thread_id}`} className="conv-row">
+                  <div className="conv-avatar">{msg.recipient_username[0].toUpperCase()}</div>
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <p style={{ fontWeight: 500, fontSize: '14px' }}>@{msg.recipient_username}</p>
+                    <p className="conv-preview">{msg.body}</p>
+                  </div>
+                  <div style={{ flexShrink: 0, textAlign: 'right' }}>
+                    <span className={`badge badge-${msg.channel}`}>{CH[msg.channel] ?? 'App'}</span>
+                    <p style={{ fontSize: '11px', color: '#555', marginTop: '4px' }}>
+                      {new Date(msg.created_at).toLocaleDateString()}
+                    </p>
+                  </div>
+                </Link>
+              ))}
+            </div>
+          </>
+        )}
+
+        {/* Inbox */}
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1rem' }}>
-          <h2 style={{ margin: 0 }}>Messages received</h2>
+          <h2 style={{ margin: 0 }}>Inbox</h2>
           <Link href="/compose"><button className="btn-ghost" style={{ fontSize: '12px' }}>+ New message</button></Link>
         </div>
 
-        {messages.length === 0 ? (
+        {inbox.length === 0 ? (
           <p className="empty">No messages yet. Share your link to start receiving messages.</p>
         ) : (
           <div className="msg-list">
-            {messages.map((msg) => (
+            {inbox.map((msg) => (
               <div key={msg.id} className="msg-item">
                 <p className="msg-meta">
                   {new Date(msg.created_at).toLocaleString()}
                   <span className={`badge badge-${msg.channel ?? 'app'}`}>
-                    {CHANNEL_LABEL[msg.channel] ?? msg.platform ?? 'App'}
+                    {CH[msg.channel] ?? 'App'}
                   </span>
                 </p>
                 <p className="msg-body">{msg.body}</p>
+                {msg.sender_id && (
+                  <div style={{ marginTop: '8px' }}>
+                    <Link href={`/reply/${msg.thread_id}`}>
+                      <button className="btn-reply">Reply anonymously →</button>
+                    </Link>
+                  </div>
+                )}
               </div>
             ))}
           </div>

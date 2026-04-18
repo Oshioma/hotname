@@ -6,10 +6,13 @@ const MAX_BODY = 500;
 
 /**
  * POST /api/send-message
- * Body: { to_username: string, body: string, channel: 'sms' | 'whatsapp' | 'app' }
- *
- * Looks up the recipient's phone number by hotname, sends via Twilio (sms/whatsapp),
- * and logs the message in the messages table.
+ * Body: {
+ *   to_username: string,
+ *   body: string,
+ *   channel?: 'sms' | 'whatsapp' | 'app',
+ *   thread_id?: string,   // omit to start a new thread
+ *   parent_id?: string,   // id of the message being replied to
+ * }
  */
 export async function POST(request) {
   let payload;
@@ -19,7 +22,7 @@ export async function POST(request) {
     return NextResponse.json({ error: 'Invalid JSON.' }, { status: 400 });
   }
 
-  const { to_username, body, channel = 'app' } = payload ?? {};
+  const { to_username, body, channel = 'app', thread_id, parent_id } = payload ?? {};
 
   if (!to_username || typeof to_username !== 'string') {
     return NextResponse.json({ error: 'to_username is required.' }, { status: 400 });
@@ -40,7 +43,6 @@ export async function POST(request) {
     return NextResponse.json({ error: 'Unauthorized.' }, { status: 401 });
   }
 
-  // Look up recipient profile
   const { data: recipient } = await supabase
     .from('profiles')
     .select('id, username, phone_number, display_name')
@@ -53,7 +55,6 @@ export async function POST(request) {
 
   const trimmedBody = body.trim();
 
-  // Send via Twilio for sms/whatsapp channels
   if (channel === 'sms' || channel === 'whatsapp') {
     if (!recipient.phone_number) {
       return NextResponse.json(
@@ -61,7 +62,6 @@ export async function POST(request) {
         { status: 422 }
       );
     }
-
     try {
       if (channel === 'sms') {
         await sendSms(recipient.phone_number, trimmedBody);
@@ -71,27 +71,34 @@ export async function POST(request) {
     } catch (err) {
       console.error('Twilio send error:', err);
       return NextResponse.json(
-        { error: 'Failed to send message via Twilio. Check your configuration.' },
+        { error: 'Failed to send via Twilio. Check your configuration.' },
         { status: 502 }
       );
     }
   }
 
-  // Log to database
-  const { error: dbError } = await supabase.from('messages').insert({
+  const insert = {
     sender_id: user.id,
     recipient_username: recipient.username,
     body: trimmedBody,
     channel,
     platform: channel === 'sms' ? 'SMS' : channel === 'whatsapp' ? 'WhatsApp' : 'App',
-  });
+  };
+  if (thread_id) insert.thread_id = thread_id;
+  if (parent_id) insert.parent_id = parent_id;
+
+  const { data: saved, error: dbError } = await supabase
+    .from('messages')
+    .insert(insert)
+    .select('id, thread_id')
+    .single();
 
   if (dbError) {
     console.error('DB insert error:', dbError);
     return NextResponse.json({ error: 'Message sent but could not be logged.' }, { status: 500 });
   }
 
-  // Auto-save sender's contact if not already saved
+  // Auto-save contact
   await supabase
     .from('contacts')
     .upsert(
@@ -99,5 +106,5 @@ export async function POST(request) {
       { onConflict: 'user_id,contact_username', ignoreDuplicates: true }
     );
 
-  return NextResponse.json({ ok: true });
+  return NextResponse.json({ ok: true, thread_id: saved.thread_id, message_id: saved.id });
 }

@@ -263,3 +263,215 @@ nav {
 .btn-danger:hover { border-color: #ff4444; color: #ff4444; }
 
 .plat-tab.disabled { opacity: 0.35; cursor: not-allowed; }
+
+/* REPLY BUTTON */
+.btn-reply {
+  background: transparent;
+  border: 0.5px solid #333;
+  color: #888;
+  padding: 5px 12px;
+  border-radius: 20px;
+  font-size: 12px;
+  cursor: pointer;
+  transition: border-color 0.15s, color 0.15s;
+}
+.btn-reply:hover { border-color: #ff5c3a; color: #ff5c3a; }
+
+/* CONVERSATIONS LIST */
+.conv-list { display: flex; flex-direction: column; gap: 8px; }
+.conv-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  background: #1a1a1a;
+  border: 0.5px solid #2a2a2a;
+  border-radius: 10px;
+  padding: 12px 14px;
+  text-decoration: none;
+  color: inherit;
+  transition: border-color 0.15s;
+}
+.conv-row:hover { border-color: #ff5c3a; }
+.conv-avatar {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: #ff5c3a22;
+  color: #ff5c3a;
+  font-weight: 600;
+  font-size: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+.conv-preview {
+  font-size: 12px;
+  color: #555;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 300px;
+  margin-top: 2px;
+}
+
+/* THREAD PAGE */
+.thread-wrap {
+  max-width: 640px;
+  margin: 0 auto;
+  padding: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  min-height: calc(100vh - 57px);
+}
+.thread-header {
+  margin-bottom: 1.5rem;
+  padding-bottom: 1rem;
+  border-bottom: 0.5px solid #2a2a2a;
+}
+.thread-anon-badge {
+  display: inline-block;
+  background: #1a1a1a;
+  border: 0.5px solid #2a2a2a;
+  border-radius: 20px;
+  padding: 4px 12px;
+  font-size: 12px;
+  color: #888;
+  margin-bottom: 8px;
+}
+.thread-hint { font-size: 12px; color: #555; line-height: 1.5; }
+.thread-messages { flex: 1; display: flex; flex-direction: column; gap: 12px; margin-bottom: 1.5rem; }
+.thread-bubble {
+  max-width: 78%;
+  padding: 12px 14px;
+  border-radius: 14px;
+}
+.thread-bubble.received {
+  background: #1a1a1a;
+  border: 0.5px solid #2a2a2a;
+  align-self: flex-start;
+  border-bottom-left-radius: 4px;
+}
+.thread-bubble.sent {
+  background: #ff5c3a18;
+  border: 0.5px solid #ff5c3a44;
+  align-self: flex-end;
+  border-bottom-right-radius: 4px;
+}
+.bubble-body { font-size: 14px; color: #e0e0e0; line-height: 1.5; margin-bottom: 6px; }
+.bubble-meta { font-size: 10px; color: #555; }
+.thread-reply-form {
+  background: #1a1a1a;
+  border: 0.5px solid #2a2a2a;
+  border-radius: 14px;
+  padding: 14px;
+}
+.thread-reply-form textarea {
+  width: 100%;
+  background: #0f0f0f;
+  border: 0.5px solid #333;
+  border-radius: 8px;
+  padding: 10px 12px;
+  color: #f0f0f0;
+  font-size: 14px;
+  outline: none;
+  font-family: inherit;
+  resize: vertical;
+}
+.thread-reply-form textarea:focus { border-color: #ff5c3a; }
+
+/* ── LINK-IN-BIO PAGE ─────────────────────────────────────── */
+.bio-page {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  background: #0a0a0a;
+}
+.bio-nav {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1rem 1.5rem;
+  border-bottom: 0.5px solid #1a1a1a;
+}
+.bio-hero {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  padding: 3.5rem 1.5rem 2rem;
+}
+.bio-avatar {
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #ff5c3a, #ff8c42);
+  color: #fff;
+  font-size: 28px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 1.2rem;
+  letter-spacing: -1px;
+}
+.bio-name {
+  font-size: 1.6rem;
+  font-weight: 700;
+  margin-bottom: 4px;
+  letter-spacing: -0.5px;
+}
+.bio-handle {
+  font-size: 14px;
+  color: #ff5c3a;
+  font-family: monospace;
+  margin-bottom: 12px;
+}
+.bio-text {
+  font-size: 15px;
+  color: #999;
+  max-width: 400px;
+  line-height: 1.6;
+}
+.bio-form-wrap {
+  max-width: 460px;
+  width: 100%;
+  margin: 0 auto;
+  padding: 0 1.5rem 2rem;
+}
+.bio-msg-form {
+  background: #1a1a1a;
+  border: 0.5px solid #2a2a2a;
+  border-radius: 16px;
+  padding: 1.5rem;
+}
+.bio-form-label {
+  font-size: 12px;
+  color: #888;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 10px;
+}
+.bio-msg-form textarea {
+  width: 100%;
+  background: #0f0f0f;
+  border: 0.5px solid #333;
+  border-radius: 8px;
+  padding: 10px 12px;
+  color: #f0f0f0;
+  font-size: 14px;
+  outline: none;
+  font-family: inherit;
+  resize: vertical;
+}
+.bio-msg-form textarea:focus { border-color: #ff5c3a; }
+.bio-sent { text-align: center; padding: 1.5rem; }
+.bio-footer {
+  margin-top: auto;
+  padding: 2rem;
+  text-align: center;
+  font-size: 12px;
+  color: #444;
+}
+.bio-footer a { color: #555; text-decoration: none; }
+.bio-footer a:hover { color: #ff5c3a; }
