@@ -4,20 +4,12 @@ import { useActionState } from "react";
 import Link from "next/link";
 import Script from "next/script";
 import { sendPasswordReset, type ActionState } from "@/lib/auth/actions";
-import { buildAuthQuery } from "@/lib/auth/return-to";
 
-interface ForgotPasswordFormProps {
-  app: string | null;
-  returnTo: string | null;
-}
-
-export function ForgotPasswordForm({ app, returnTo }: ForgotPasswordFormProps) {
+export function ForgotPasswordForm() {
   const [state, action, isPending] = useActionState<ActionState | null, FormData>(
     sendPasswordReset,
     null
   );
-
-  const authQuery = buildAuthQuery(app, returnTo);
 
   if (state?.success) {
     return (
@@ -29,9 +21,6 @@ export function ForgotPasswordForm({ app, returnTo }: ForgotPasswordFormProps) {
 
   return (
     <form action={action} className="form">
-      <input type="hidden" name="app" value={app ?? ""} />
-      <input type="hidden" name="returnTo" value={returnTo ?? ""} />
-
       {state?.error && <p className="alert alert-error">{state.error}</p>}
 
       <div className="field">
@@ -59,7 +48,7 @@ export function ForgotPasswordForm({ app, returnTo }: ForgotPasswordFormProps) {
       </button>
 
       <p className="form-footer">
-        <Link href={`/sign-in${authQuery}`}>Back to sign in</Link>
+        <Link href="/sign-in">Back to sign in</Link>
       </p>
       <Script
         src="https://challenges.cloudflare.com/turnstile/v0/api.js"

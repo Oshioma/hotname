@@ -2,8 +2,8 @@ import type { Metadata } from "next";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "Hotname Auth",
-  description: "Central authentication for Hotname services.",
+  title: "Hotname",
+  description: "Sign in to your Hotname account.",
 };
 
 export default function RootLayout({

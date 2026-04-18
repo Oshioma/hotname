@@ -4,26 +4,15 @@ import { useActionState } from "react";
 import Link from "next/link";
 import Script from "next/script";
 import { signInWithPassword, type ActionState } from "@/lib/auth/actions";
-import { buildAuthQuery } from "@/lib/auth/return-to";
 
-interface SignInFormProps {
-  app: string | null;
-  returnTo: string | null;
-}
-
-export function SignInForm({ app, returnTo }: SignInFormProps) {
+export function SignInForm() {
   const [state, action, isPending] = useActionState<ActionState | null, FormData>(
     signInWithPassword,
     null
   );
 
-  const authQuery = buildAuthQuery(app, returnTo);
-
   return (
     <form action={action} className="form">
-      <input type="hidden" name="app" value={app ?? ""} />
-      <input type="hidden" name="returnTo" value={returnTo ?? ""} />
-
       {state?.error && <p className="alert alert-error">{state.error}</p>}
 
       <div className="field">
@@ -57,7 +46,7 @@ export function SignInForm({ app, returnTo }: SignInFormProps) {
       </div>
 
       <div className="link-row">
-        <Link href={`/forgot-password${authQuery}`} className="link">
+        <Link href="/forgot-password" className="link">
           Forgot password?
         </Link>
       </div>
@@ -73,7 +62,7 @@ export function SignInForm({ app, returnTo }: SignInFormProps) {
 
       <p className="form-footer">
         No account?{" "}
-        <Link href={`/sign-up${authQuery}`}>Create one</Link>
+        <Link href="/sign-up">Create one</Link>
       </p>
       <Script
         src="https://challenges.cloudflare.com/turnstile/v0/api.js"

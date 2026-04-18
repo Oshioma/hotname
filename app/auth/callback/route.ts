@@ -2,18 +2,15 @@ import { NextResponse, type NextRequest } from "next/server";
 import { createServerClient } from "@supabase/ssr";
 import type { CookieOptions } from "@supabase/ssr";
 import { cookies } from "next/headers";
-import { getValidatedReturnTo, buildAuthQuery } from "@/lib/auth/return-to";
 
 /**
  * Handles the Supabase auth callback (PKCE code exchange).
  *
  * Flow:
  *   1. Exchange `code` for a session.
- *   2. If type=recovery, redirect to /reset-password (preserving app/returnTo).
- *   3. Otherwise, validate returnTo against the allowlist and redirect there.
+ *   2. If type=recovery, redirect to /reset-password.
+ *   3. Otherwise, redirect to /security.
  *   4. Any error redirects back to /sign-in with a safe message.
- *
- * returnTo is ALWAYS validated via the allowlist — no open redirects possible.
  */
 export async function GET(request: NextRequest) {
   const url = new URL(request.url);
@@ -23,8 +20,6 @@ export async function GET(request: NextRequest) {
   const error = url.searchParams.get("error");
   const errorDescription = url.searchParams.get("error_description");
   const type = url.searchParams.get("type");
-  const returnTo = url.searchParams.get("returnTo");
-  const app = url.searchParams.get("app");
 
   // Surface provider/email errors back to the sign-in page
   if (error) {
@@ -67,11 +62,9 @@ export async function GET(request: NextRequest) {
 
   // Password recovery flow → redirect to reset-password
   if (type === "recovery") {
-    const qs = buildAuthQuery(app, returnTo);
-    return NextResponse.redirect(`${siteUrl}/reset-password${qs}`);
+    return NextResponse.redirect(`${siteUrl}/reset-password`);
   }
 
-  // Standard auth (sign-in / sign-up) → validate returnTo then redirect
-  const safeReturnTo = getValidatedReturnTo(returnTo);
-  return NextResponse.redirect(safeReturnTo);
+  // Standard auth (sign-in / sign-up) → redirect to security page
+  return NextResponse.redirect(`${siteUrl}/security`);
 }

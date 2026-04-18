@@ -1,14 +1,6 @@
-import { parseAuthContext } from "@/lib/auth/return-to";
 import { ForgotPasswordForm } from "./ForgotPasswordForm";
 
-interface PageProps {
-  searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
-}
-
-export default async function ForgotPasswordPage({ searchParams }: PageProps) {
-  const params = await searchParams;
-  const { app, returnTo } = parseAuthContext({ searchParams: params });
-
+export default async function ForgotPasswordPage() {
   return (
     <main className="page">
       <div className="card">
@@ -16,7 +8,7 @@ export default async function ForgotPasswordPage({ searchParams }: PageProps) {
         <p className="card-subtitle">
           Enter your email and we&apos;ll send you a reset link.
         </p>
-        <ForgotPasswordForm app={app} returnTo={returnTo} />
+        <ForgotPasswordForm />
       </div>
     </main>
   );

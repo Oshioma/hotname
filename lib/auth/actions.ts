@@ -3,7 +3,6 @@
 import { redirect } from "next/navigation";
 import { z } from "zod";
 import { createClient } from "@/lib/supabase/server";
-import { getValidatedReturnTo, getSafeFallbackUrl } from "@/lib/auth/return-to";
 import { verifyTurnstile } from "@/lib/auth/turnstile";
 
 // ---------------------------------------------------------------------------
@@ -24,8 +23,6 @@ export type ActionState = {
 const signInSchema = z.object({
   email: z.string().email("Enter a valid email address."),
   password: z.string().min(1, "Password is required."),
-  app: z.string().optional(),
-  returnTo: z.string().optional(),
 });
 
 const signUpSchema = z
@@ -34,8 +31,6 @@ const signUpSchema = z
     email: z.string().email("Enter a valid email address."),
     password: z.string().min(8, "Password must be at least 8 characters."),
     confirmPassword: z.string(),
-    app: z.string().optional(),
-    returnTo: z.string().optional(),
   })
   .refine((d) => d.password === d.confirmPassword, {
     message: "Passwords do not match.",
@@ -44,16 +39,12 @@ const signUpSchema = z
 
 const forgotPasswordSchema = z.object({
   email: z.string().email("Enter a valid email address."),
-  app: z.string().optional(),
-  returnTo: z.string().optional(),
 });
 
 const resetPasswordSchema = z
   .object({
     password: z.string().min(8, "Password must be at least 8 characters."),
     confirmPassword: z.string(),
-    app: z.string().optional(),
-    returnTo: z.string().optional(),
   })
   .refine((d) => d.password === d.confirmPassword, {
     message: "Passwords do not match.",
@@ -66,7 +57,7 @@ const resetPasswordSchema = z
 
 /**
  * Signs in an existing user with email and password.
- * On success, redirects to the validated returnTo URL.
+ * On success, redirects to /security.
  */
 export async function signInWithPassword(
   _prevState: ActionState | null,
@@ -81,8 +72,6 @@ export async function signInWithPassword(
   const raw = {
     email: formData.get("email") as string,
     password: formData.get("password") as string,
-    app: (formData.get("app") as string) || undefined,
-    returnTo: (formData.get("returnTo") as string) || undefined,
   };
 
   const result = signInSchema.safeParse(raw);
@@ -90,7 +79,7 @@ export async function signInWithPassword(
     return { fieldErrors: result.error.flatten().fieldErrors };
   }
 
-  const { email, password, returnTo } = result.data;
+  const { email, password } = result.data;
 
   const supabase = await createClient();
   const { error } = await supabase.auth.signInWithPassword({ email, password });
@@ -99,7 +88,7 @@ export async function signInWithPassword(
     return { error: "Invalid email or password." };
   }
 
-  redirect(getValidatedReturnTo(returnTo));
+  redirect("/security");
 }
 
 /**
@@ -121,8 +110,6 @@ export async function signUpWithPassword(
     email: formData.get("email") as string,
     password: formData.get("password") as string,
     confirmPassword: formData.get("confirmPassword") as string,
-    app: (formData.get("app") as string) || undefined,
-    returnTo: (formData.get("returnTo") as string) || undefined,
   };
 
   const result = signUpSchema.safeParse(raw);
@@ -130,15 +117,10 @@ export async function signUpWithPassword(
     return { fieldErrors: result.error.flatten().fieldErrors };
   }
 
-  const { fullName, email, password, app, returnTo } = result.data;
+  const { fullName, email, password } = result.data;
 
   const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
   const callbackUrl = new URL(`${siteUrl}/auth/callback`);
-  if (app) callbackUrl.searchParams.set("app", app);
-  const safeReturnTo = returnTo ? getValidatedReturnTo(returnTo) : null;
-  if (safeReturnTo && safeReturnTo !== getSafeFallbackUrl()) {
-    callbackUrl.searchParams.set("returnTo", safeReturnTo);
-  }
 
   const supabase = await createClient();
   const { error } = await supabase.auth.signUp({
@@ -163,7 +145,7 @@ export async function signUpWithPassword(
 /**
  * Sends a password-reset email.
  * The reset link directs the user back to /auth/callback with type=recovery,
- * carrying app and returnTo so they can be forwarded after reset.
+ * which then redirects to /reset-password.
  */
 export async function sendPasswordReset(
   _prevState: ActionState | null,
@@ -177,8 +159,6 @@ export async function sendPasswordReset(
 
   const raw = {
     email: formData.get("email") as string,
-    app: (formData.get("app") as string) || undefined,
-    returnTo: (formData.get("returnTo") as string) || undefined,
   };
 
   const result = forgotPasswordSchema.safeParse(raw);
@@ -186,16 +166,11 @@ export async function sendPasswordReset(
     return { fieldErrors: result.error.flatten().fieldErrors };
   }
 
-  const { email, app, returnTo } = result.data;
+  const { email } = result.data;
 
   const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
   const callbackUrl = new URL(`${siteUrl}/auth/callback`);
   callbackUrl.searchParams.set("type", "recovery");
-  if (app) callbackUrl.searchParams.set("app", app);
-  const safeReturnTo = returnTo ? getValidatedReturnTo(returnTo) : null;
-  if (safeReturnTo && safeReturnTo !== getSafeFallbackUrl()) {
-    callbackUrl.searchParams.set("returnTo", safeReturnTo);
-  }
 
   const supabase = await createClient();
   const { error } = await supabase.auth.resetPasswordForEmail(email, {
@@ -224,8 +199,6 @@ export async function updatePassword(
   const raw = {
     password: formData.get("password") as string,
     confirmPassword: formData.get("confirmPassword") as string,
-    app: (formData.get("app") as string) || undefined,
-    returnTo: (formData.get("returnTo") as string) || undefined,
   };
 
   const result = resetPasswordSchema.safeParse(raw);
@@ -242,11 +215,7 @@ export async function updatePassword(
     return { error: error.message };
   }
 
-  redirect(
-    result.data.returnTo
-      ? getValidatedReturnTo(result.data.returnTo)
-      : "/security"
-  );
+  redirect("/security");
 }
 
 /**
