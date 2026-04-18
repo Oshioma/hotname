@@ -98,3 +98,49 @@ create policy "Users can update their own contacts"
 
 create policy "Users can delete their own contacts"
   on contacts for delete using (auth.uid() = user_id);
+
+-- ─────────────────────────────────────────────
+-- CHANNELS
+-- Each user has one row per channel type.
+-- value = phone number (whatsapp/sms), email, or postal address (post).
+-- default_access = 'everyone' means visible to all on the bio page;
+-- 'selected' means only users in channel_access can see it.
+-- ─────────────────────────────────────────────
+create table if not exists channels (
+  id             uuid primary key default gen_random_uuid(),
+  user_id        uuid not null references auth.users(id) on delete cascade,
+  type           text not null check (type in ('whatsapp', 'sms', 'email', 'post')),
+  enabled        boolean not null default false,
+  verified       boolean not null default false,
+  value          text,
+  default_access text not null default 'everyone' check (default_access in ('everyone', 'selected')),
+  created_at     timestamptz default now(),
+  unique(user_id, type)
+);
+
+alter table channels enable row level security;
+
+create policy "Users can manage their own channels"
+  on channels for all
+  using (auth.uid() = user_id)
+  with check (auth.uid() = user_id);
+
+-- ─────────────────────────────────────────────
+-- CHANNEL ACCESS
+-- When a channel's default_access is 'selected', only usernames
+-- listed here can see that channel on the owner's bio page.
+-- ─────────────────────────────────────────────
+create table if not exists channel_access (
+  id               uuid primary key default gen_random_uuid(),
+  channel_id       uuid not null references channels(id) on delete cascade,
+  allowed_username text not null references profiles(username) on delete cascade,
+  created_at       timestamptz default now(),
+  unique(channel_id, allowed_username)
+);
+
+alter table channel_access enable row level security;
+
+create policy "Channel owner can manage access list"
+  on channel_access for all
+  using  (auth.uid() = (select user_id from channels where id = channel_id limit 1))
+  with check (auth.uid() = (select user_id from channels where id = channel_id limit 1));

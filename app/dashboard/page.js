@@ -65,6 +65,7 @@ export default async function DashboardPage() {
         <Link href="/dashboard"><span className="logo">hot<span>name</span></span></Link>
         <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
           <Link href="/contacts"><button className="btn-ghost">Contacts</button></Link>
+          <Link href="/channels"><button className="btn-ghost">Channels</button></Link>
           <Link href="/settings"><button className="btn-ghost">Settings</button></Link>
           <form action="/api/auth" method="POST" style={{ display: 'inline' }}>
             <input type="hidden" name="action" value="signout" />
