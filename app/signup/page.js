@@ -19,19 +19,39 @@ export default function SignupPage() {
     const password = data.get('password');
     const username = data.get('username');
 
-    const res = await fetch('/api/auth', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ action: 'signup', email, password, username }),
-    });
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 15000);
 
-    const json = await res.json();
-    setLoading(false);
+    try {
+      const res = await fetch('/api/auth', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'signup', email, password, username }),
+        signal: controller.signal,
+      });
 
-    if (!res.ok) {
-      setError(json.error || 'Something went wrong.');
-    } else {
+      let json = {};
+      try {
+        json = await res.json();
+      } catch {
+        // Ignore JSON parse errors and surface a generic error below.
+      }
+
+      if (!res.ok) {
+        setError(json.error || 'Unable to create account right now.');
+        return;
+      }
+
       router.push('/dashboard');
+    } catch (err) {
+      if (err?.name === 'AbortError') {
+        setError('Request timed out. Please try again.');
+      } else {
+        setError('Network error. Please check your connection and try again.');
+      }
+    } finally {
+      clearTimeout(timeoutId);
+      setLoading(false);
     }
   }
 
