@@ -18,6 +18,8 @@ export default function SignupPage() {
     const email = data.get('email');
     const password = data.get('password');
     const username = data.get('username');
+    const display_name = data.get('display_name');
+    const phone_number = data.get('phone_number');
 
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), 15000);
@@ -26,16 +28,12 @@ export default function SignupPage() {
       const res = await fetch('/api/auth', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ action: 'signup', email, password, username }),
+        body: JSON.stringify({ action: 'signup', email, password, username, display_name, phone_number }),
         signal: controller.signal,
       });
 
       let json = {};
-      try {
-        json = await res.json();
-      } catch {
-        // Ignore JSON parse errors and surface a generic error below.
-      }
+      try { json = await res.json(); } catch { /* non-JSON response */ }
 
       if (!res.ok) {
         setError(json.error || 'Unable to create account right now.');
@@ -69,7 +67,7 @@ export default function SignupPage() {
 
           <form onSubmit={handleSubmit}>
             <div className="field">
-              <label>Username</label>
+              <label>Username (your hotname)</label>
               <div className="prefix">
                 <span className="at">@</span>
                 <input
@@ -87,6 +85,17 @@ export default function SignupPage() {
             </div>
 
             <div className="field">
+              <label>Display name</label>
+              <input
+                name="display_name"
+                type="text"
+                placeholder="Your full name (optional)"
+                maxLength={60}
+                autoComplete="name"
+              />
+            </div>
+
+            <div className="field">
               <label>Email</label>
               <input name="email" type="email" placeholder="you@example.com" required autoComplete="email" />
             </div>
@@ -94,6 +103,18 @@ export default function SignupPage() {
             <div className="field">
               <label>Password</label>
               <input name="password" type="password" placeholder="Min 8 characters" required minLength={8} autoComplete="new-password" />
+            </div>
+
+            <div className="field">
+              <label>Phone number <span style={{ color: '#555' }}>(for SMS/WhatsApp — optional)</span></label>
+              <input
+                name="phone_number"
+                type="tel"
+                placeholder="+447911123456"
+                pattern="\+[0-9]{7,15}"
+                title="E.164 format: start with + and country code"
+                autoComplete="tel"
+              />
             </div>
 
             <button className="btn-primary" type="submit" disabled={loading} style={{ width: '100%', marginTop: '0.5rem' }}>

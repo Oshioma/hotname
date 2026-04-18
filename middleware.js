@@ -8,7 +8,7 @@ import { NextResponse } from 'next/server';
  */
 export async function middleware(request) {
   const { pathname } = request.nextUrl;
-  const protectedPaths = ['/dashboard', '/send'];
+  const protectedPaths = ['/dashboard', '/send', '/compose', '/contacts', '/settings', '/reply'];
   const isProtectedPath = protectedPaths.some((p) => pathname.startsWith(p));
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL?.trim();
   const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY?.trim();

@@ -1,114 +1,63 @@
-'use client';
-
-import { useState } from 'react';
+import { notFound } from 'next/navigation';
 import Link from 'next/link';
+import { createClient } from '@/lib/supabase/server';
+import BioMessageForm from './BioMessageForm';
 
-const PLATFORMS = ['Twitter / X', 'Instagram', 'WhatsApp', 'Email', 'General'];
+export async function generateMetadata({ params }) {
+  const { username } = await params;
+  return {
+    title: `@${username} — Hotname`,
+    description: `Send ${username} an anonymous message.`,
+  };
+}
 
-export default function UserSendPage({ params }) {
-  const { username } = params;
-  const [platform, setPlatform] = useState('General');
-  const [body, setBody] = useState('');
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState('');
-  const [sent, setSent] = useState(false);
+export default async function BioPage({ params }) {
+  const { username } = await params;
+  const supabase = await createClient();
 
-  const MAX = 500;
+  const { data: profile } = await supabase
+    .from('profiles')
+    .select('username, display_name, bio, phone_number')
+    .eq('username', username.toLowerCase())
+    .maybeSingle();
 
-  async function handleSubmit(e) {
-    e.preventDefault();
-    if (!body.trim()) return;
-    setLoading(true);
-    setError('');
+  if (!profile) notFound();
 
-    const res = await fetch('/api/send', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ recipient_username: username, platform, body: body.trim() }),
-    });
-
-    const json = await res.json();
-    setLoading(false);
-
-    if (!res.ok) {
-      setError(json.error || 'Failed to send message.');
-    } else {
-      setSent(true);
-    }
-  }
+  const initials = (profile.display_name || profile.username)
+    .split(' ')
+    .map((w) => w[0])
+    .join('')
+    .toUpperCase()
+    .slice(0, 2);
 
   return (
-    <>
-      <nav>
+    <div className="bio-page">
+      <nav className="bio-nav">
         <Link href="/"><span className="logo">hot<span>name</span></span></Link>
+        <Link href="/signup"><button className="btn-ghost" style={{ fontSize: '12px' }}>Get your Hotname →</button></Link>
       </nav>
-      <div className="send-wrap">
-        <div className="send-card">
-          {sent ? (
-            <div className="success-box">
-              <div className="tick">✅</div>
-              <h3>Message sent!</h3>
-              <p>Your message was delivered to @{username}.</p>
-              <button
-                className="btn-primary"
-                style={{ marginTop: '1.5rem' }}
-                onClick={() => { setSent(false); setBody(''); }}
-              >
-                Send another
-              </button>
-            </div>
-          ) : (
-            <>
-              <div className="to-user">
-                <div className="avatar">{username[0].toUpperCase()}</div>
-                <div>
-                  <p style={{ fontWeight: 600 }}>@{username}</p>
-                  <p style={{ fontSize: '12px', color: '#888' }}>Send an anonymous message</p>
-                </div>
-              </div>
 
-              {error && <p className="error-msg">{error}</p>}
+      <div className="bio-hero">
+        {/* Avatar */}
+        <div className="bio-avatar">{initials}</div>
 
-              <form onSubmit={handleSubmit}>
-                <p style={{ fontSize: '11px', color: '#888', marginBottom: '8px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Platform</p>
-                <div className="plat-tabs" style={{ marginBottom: '1rem' }}>
-                  {PLATFORMS.map((p) => (
-                    <button
-                      key={p}
-                      type="button"
-                      className={`plat-tab${platform === p ? ' active' : ''}`}
-                      onClick={() => setPlatform(p)}
-                    >
-                      {p}
-                    </button>
-                  ))}
-                </div>
+        {/* Identity */}
+        <h1 className="bio-name">{profile.display_name || `@${profile.username}`}</h1>
+        <p className="bio-handle">@{profile.username}</p>
 
-                <div className="field">
-                  <label>Message</label>
-                  <textarea
-                    rows={5}
-                    placeholder="Write your message…"
-                    value={body}
-                    onChange={(e) => setBody(e.target.value.slice(0, MAX))}
-                    required
-                  />
-                  <p className="char-count">{body.length}/{MAX}</p>
-                </div>
-
-                <button
-                  className="btn-primary"
-                  type="submit"
-                  disabled={loading || !body.trim()}
-                  style={{ width: '100%' }}
-                >
-                  {loading ? 'Sending…' : 'Send message'}
-                </button>
-              </form>
-            </>
-          )}
-        </div>
+        {/* Bio */}
+        {profile.bio && <p className="bio-text">{profile.bio}</p>}
       </div>
-    </>
+
+      {/* Message form */}
+      <div className="bio-form-wrap">
+        <BioMessageForm username={profile.username} />
+      </div>
+
+      {/* Powered by footer */}
+      <div className="bio-footer">
+        <Link href="/">Powered by <strong>hotname</strong></Link>
+      </div>
+    </div>
   );
 }
