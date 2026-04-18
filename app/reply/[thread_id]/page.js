@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { useParams } from 'next/navigation';
 import Link from 'next/link';
 
@@ -14,7 +14,7 @@ export default function ReplyThreadPage() {
   const [sendError, setSendError] = useState('');
   const bottomRef = useRef(null);
 
-  async function fetchThread() {
+  const fetchThread = useCallback(async () => {
     try {
       const res = await fetch(`/api/thread/${thread_id}`);
       const json = await res.json();
@@ -28,9 +28,9 @@ export default function ReplyThreadPage() {
     } finally {
       setLoading(false);
     }
-  }
+  }, [thread_id]);
 
-  useEffect(() => { fetchThread(); }, [thread_id]);
+  useEffect(() => { fetchThread(); }, [fetchThread]);
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' });

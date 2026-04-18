@@ -1,4 +1,5 @@
 import { notFound } from 'next/navigation';
+import Link from 'next/link';
 import { createClient } from '@/lib/supabase/server';
 import BioMessageForm from './BioMessageForm';
 
@@ -32,8 +33,8 @@ export default async function BioPage({ params }) {
   return (
     <div className="bio-page">
       <nav className="bio-nav">
-        <a href="/"><span className="logo">hot<span>name</span></span></a>
-        <a href="/signup"><button className="btn-ghost" style={{ fontSize: '12px' }}>Get your Hotname →</button></a>
+        <Link href="/"><span className="logo">hot<span>name</span></span></Link>
+        <Link href="/signup"><button className="btn-ghost" style={{ fontSize: '12px' }}>Get your Hotname →</button></Link>
       </nav>
 
       <div className="bio-hero">
@@ -55,7 +56,7 @@ export default async function BioPage({ params }) {
 
       {/* Powered by footer */}
       <div className="bio-footer">
-        <a href="/">Powered by <strong>hotname</strong></a>
+        <Link href="/">Powered by <strong>hotname</strong></Link>
       </div>
     </div>
   );
