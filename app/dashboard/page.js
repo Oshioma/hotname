@@ -84,10 +84,14 @@ export default async function DashboardPage() {
               : <p style={{ fontSize: '12px', color: '#ff5c3a', marginTop: '4px' }}>No phone — <Link href="/settings" style={{ color: '#ff5c3a', textDecoration: 'underline' }}>add one</Link> for SMS/WhatsApp</p>
             }
             {shareUrl && (
-              <div className="link-box" style={{ marginTop: '10px' }}>
-                <span>{shareUrl}</span>
-                <Link href={`/${username}`} target="_blank" style={{ marginLeft: '8px', color: '#ff5c3a', fontSize: '12px', textDecoration: 'underline', whiteSpace: 'nowrap' }}>View profile →</Link>
-              </div>
+              <>
+                <div className="link-box" style={{ marginTop: '10px' }}>
+                  <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{shareUrl}</span>
+                </div>
+                <Link href={`/${username}`} target="_blank">
+                  <button className="btn-ghost" style={{ marginTop: '8px', fontSize: '12px' }}>View my profile →</button>
+                </Link>
+              </>
             )}
           </div>
           <Link href="/compose"><button className="btn-primary">Send a message</button></Link>
