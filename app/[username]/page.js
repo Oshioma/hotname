@@ -67,9 +67,14 @@ export default async function ProfilePage({ params }) {
   //   mode = 'approval'→ Request channel — message creates a pending request
   const channels = [];
   for (const ch of channelRows ?? []) {
+    const meta = CHANNEL_META[ch.type];
+    // Channels flagged privateValue (e.g. Post / postal address) never expose
+    // their raw value to the client — Hotname routes messages through them
+    // server-side.
+    const safeValue = meta?.privateValue ? null : (ch.value ?? null);
+
     if (ch.access_mode === 'open') {
-      // Public — expose the raw value so the chip can link out
-      channels.push({ type: ch.type, mode: 'direct', value: ch.value ?? null });
+      channels.push({ type: ch.type, mode: 'direct', value: safeValue });
     } else if (ch.access_mode === 'request') {
       channels.push({ type: ch.type, mode: 'approval' });
     } else if (ch.access_mode === 'selected' && viewerUsername) {
@@ -79,8 +84,7 @@ export default async function ProfilePage({ params }) {
         .eq('channel_id', ch.id)
         .eq('allowed_username', viewerUsername)
         .maybeSingle();
-      // Invite + allowlisted — they can see the raw value
-      if (access) channels.push({ type: ch.type, mode: 'allowed', value: ch.value ?? null });
+      if (access) channels.push({ type: ch.type, mode: 'allowed', value: safeValue });
     }
   }
 
@@ -149,7 +153,10 @@ export default async function ProfilePage({ params }) {
                 ch.mode === 'allowed'  ? ACCESS_LABEL.selected :
                 ch.mode === 'approval' ? ACCESS_LABEL.request :
                 '';
-              const canLinkOut = (ch.mode === 'direct' || ch.mode === 'allowed') && ch.value;
+              const canLinkOut =
+                (ch.mode === 'direct' || ch.mode === 'allowed') &&
+                ch.value &&
+                typeof meta.valueToLink === 'function';
 
               if (canLinkOut) {
                 const href = meta.valueToLink(ch.value);
