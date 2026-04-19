@@ -190,12 +190,22 @@ export default function ChannelRow({ channel, profileDefaults, onRefresh }) {
             className={`pill${channel.access_mode === mode ? ' pill-on' : ''}${mode === 'hidden' ? ' pill-off' : ''}`}
             disabled={saving}
             onClick={() => handleSetMode(mode)}
-            title={ACCESS_LABEL[mode]}
+            title={
+              mode === 'open' && channel.private_value
+                ? `Anyone can send — your ${channel.label.toLowerCase()} stays private`
+                : ACCESS_LABEL[mode]
+            }
           >
             {ACCESS_LABEL[mode]}
           </button>
         ))}
       </div>
+
+      {channel.private_value && channel.access_mode !== 'hidden' && (
+        <div className="ch-simple-note">
+          🔒 Your {channel.label.toLowerCase()} stays private — we send the {channel.label.toLowerCase()} for you.
+        </div>
+      )}
 
       {error && <div className="ch-simple-error">{error}</div>}
 

@@ -62,6 +62,8 @@ export async function GET() {
       kind: CHANNEL_META[type].kind,
       label: CHANNEL_META[type].label,
       hint: CHANNEL_META[type].hint,
+      deliverable: !!CHANNEL_META[type].deliverable,
+      private_value: !!CHANNEL_META[type].privateValue,
     };
   });
 
