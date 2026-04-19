@@ -117,7 +117,8 @@ create table if not exists connection_requests (
   )),
   redirected_to       text,                           -- channel type the owner suggested instead
   created_at          timestamptz default now(),
-  responded_at        timestamptz
+  responded_at        timestamptz,
+  deleted_at          timestamptz                     -- soft-delete → Deleted tab on /requests
 );
 
 create index if not exists connection_requests_owner_idx

@@ -905,6 +905,20 @@ nav {
 .req-who .name { font-size: 14px; font-weight: 600; }
 .req-who .handle { font-size: 12px; color: var(--text-muted); font-family: ui-monospace, monospace; }
 .req-age { font-size: 11px; color: var(--text-soft); }
+.req-delete {
+  background: transparent;
+  border: none;
+  color: var(--text-soft);
+  cursor: pointer;
+  font-size: 14px;
+  padding: 4px 6px;
+  border-radius: 6px;
+  line-height: 1;
+  opacity: 0.55;
+  transition: opacity .12s, color .12s, background .12s;
+}
+.req-delete:hover { opacity: 1; color: var(--deny); background: var(--deny-soft); }
+.req-delete:disabled { opacity: 0.2; cursor: not-allowed; }
 .req-reason {
   font-size: 14px;
   color: var(--text);

@@ -28,13 +28,15 @@ export default async function DashboardPage() {
       .from('connection_requests')
       .select('id, requester_username, channel_type, reason, status, created_at')
       .eq('owner_id', user.id)
+      .is('deleted_at', null)
       .order('created_at', { ascending: false })
       .limit(10),
     supabase
       .from('connection_requests')
       .select('id', { count: 'exact', head: true })
       .eq('owner_id', user.id)
-      .eq('status', 'pending'),
+      .eq('status', 'pending')
+      .is('deleted_at', null),
     supabase
       .from('user_connections')
       .select('id, requester_username, message, created_at')

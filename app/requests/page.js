@@ -5,9 +5,11 @@ import RequestCard from './RequestCard';
 
 export default async function RequestsPage({ searchParams }) {
   const sp = (await searchParams) ?? {};
-  const filter = sp.filter === 'all' ? 'all'
-    : sp.filter === 'resolved' ? 'resolved'
-    : 'pending';
+  const filter =
+    sp.filter === 'all'      ? 'all' :
+    sp.filter === 'resolved' ? 'resolved' :
+    sp.filter === 'deleted'  ? 'deleted' :
+                               'pending';
 
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
@@ -15,13 +17,18 @@ export default async function RequestsPage({ searchParams }) {
 
   let query = supabase
     .from('connection_requests')
-    .select('id, requester_username, channel_type, reason, status, created_at')
+    .select('id, requester_username, channel_type, reason, status, created_at, deleted_at')
     .eq('owner_id', user.id)
     .order('created_at', { ascending: false })
     .limit(60);
 
-  if (filter === 'pending')  query = query.eq('status', 'pending');
-  if (filter === 'resolved') query = query.neq('status', 'pending');
+  if (filter === 'deleted') {
+    query = query.not('deleted_at', 'is', null);
+  } else {
+    query = query.is('deleted_at', null);
+    if (filter === 'pending')  query = query.eq('status', 'pending');
+    if (filter === 'resolved') query = query.neq('status', 'pending');
+  }
 
   const { data: requests = [] } = await query;
 
@@ -47,13 +54,16 @@ export default async function RequestsPage({ searchParams }) {
           <Link href="/requests?filter=all">
             <button className={`tab${filter === 'all' ? ' active' : ''}`}>All</button>
           </Link>
+          <Link href="/requests?filter=deleted">
+            <button className={`tab${filter === 'deleted' ? ' active' : ''}`}>Deleted</button>
+          </Link>
         </div>
 
         {requests.length === 0 ? (
           <p className="empty">
-            {filter === 'pending'
-              ? 'No pending requests. You&rsquo;re all caught up.'
-              : 'Nothing here yet.'}
+            {filter === 'pending'  ? "No pending requests. You're all caught up." :
+             filter === 'deleted'  ? "Nothing in Deleted." :
+                                     "Nothing here yet."}
           </p>
         ) : (
           <div className="req-list">

@@ -171,7 +171,7 @@ export async function PATCH(request) {
   }
   const { id, action, redirect_to } = body ?? {};
   if (!id) return NextResponse.json({ error: 'id required.' }, { status: 400 });
-  if (!['approve', 'deny', 'redirect'].includes(action)) {
+  if (!['approve', 'deny', 'redirect', 'restore'].includes(action)) {
     return NextResponse.json({ error: 'Unknown action.' }, { status: 400 });
   }
   if (action === 'redirect' && !CHANNEL_META[redirect_to]) {
@@ -194,10 +194,15 @@ export async function PATCH(request) {
     return NextResponse.json({ error: 'Not your request.' }, { status: 403 });
   }
 
-  const update = { responded_at: new Date().toISOString() };
-  if (action === 'approve')  update.status = 'approved';
-  if (action === 'deny')     update.status = 'denied';
-  if (action === 'redirect') { update.status = 'redirected'; update.redirected_to = redirect_to; }
+  const update = {};
+  if (action === 'restore') {
+    update.deleted_at = null;
+  } else {
+    update.responded_at = new Date().toISOString();
+    if (action === 'approve')  update.status = 'approved';
+    if (action === 'deny')     update.status = 'denied';
+    if (action === 'redirect') { update.status = 'redirected'; update.redirected_to = redirect_to; }
+  }
 
   const { error } = await service
     .from('connection_requests')
@@ -223,6 +228,57 @@ export async function PATCH(request) {
     }
   }
 
+  return NextResponse.json({ ok: true });
+}
+
+/**
+ * DELETE /api/requests
+ * Body / query: { id, permanent?: boolean }
+ * Owner only.
+ *   permanent !== true → soft-delete (sets deleted_at). Shown under the
+ *                         Deleted tab on /requests and can be restored.
+ *   permanent === true → hard delete. Gone for good.
+ */
+export async function DELETE(request) {
+  let id = null;
+  let permanent = false;
+  try {
+    const body = await request.json();
+    id = body?.id ?? null;
+    permanent = !!body?.permanent;
+  } catch {
+    const sp = new URL(request.url).searchParams;
+    id = sp.get('id');
+    permanent = sp.get('permanent') === '1';
+  }
+  if (!id) return NextResponse.json({ error: 'id required.' }, { status: 400 });
+
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return NextResponse.json({ error: 'Unauthorized.' }, { status: 401 });
+
+  const service = createServiceClient();
+
+  const { data: req } = await service
+    .from('connection_requests')
+    .select('id, owner_id')
+    .eq('id', id)
+    .maybeSingle();
+  if (!req) return NextResponse.json({ ok: true });
+  if (req.owner_id !== user.id) {
+    return NextResponse.json({ error: 'Not your message.' }, { status: 403 });
+  }
+
+  if (permanent) {
+    const { error } = await service.from('connection_requests').delete().eq('id', id);
+    if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+  } else {
+    const { error } = await service
+      .from('connection_requests')
+      .update({ deleted_at: new Date().toISOString() })
+      .eq('id', id);
+    if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+  }
   return NextResponse.json({ ok: true });
 }
 

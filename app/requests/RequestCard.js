@@ -25,6 +25,7 @@ export default function RequestCard({ request }) {
   const meta = CHANNEL_META[request.channel_type];
   const initials = request.requester_username.slice(0, 2).toUpperCase();
   const channelLabel = meta?.label ?? request.channel_type;
+  const isDeleted = !!request.deleted_at;
   const subtitle =
     request.status === 'pending' ? `wants to reach you on ${channelLabel}`
     : request.status === 'approved' ? `messaged you via ${channelLabel}`
@@ -33,8 +34,7 @@ export default function RequestCard({ request }) {
     : channelLabel;
 
   async function respond(action, redirect_to) {
-    setBusy(true);
-    setError('');
+    setBusy(true); setError('');
     try {
       const res = await fetch('/api/requests', {
         method: 'PATCH',
@@ -43,16 +43,27 @@ export default function RequestCard({ request }) {
       });
       let json = {};
       try { json = await res.json(); } catch { /* ignore */ }
-      if (!res.ok) {
-        setError(json.error || 'Could not update request.');
-        return;
-      }
+      if (!res.ok) { setError(json.error || 'Could not update request.'); return; }
       router.refresh();
-    } catch {
-      setError('Network error.');
-    } finally {
-      setBusy(false);
-    }
+    } catch { setError('Network error.'); }
+    finally { setBusy(false); }
+  }
+
+  async function deleteRequest({ permanent = false } = {}) {
+    if (permanent && !confirm('Delete this message forever? This cannot be undone.')) return;
+    setBusy(true); setError('');
+    try {
+      const res = await fetch('/api/requests', {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ id: request.id, permanent }),
+      });
+      let json = {};
+      try { json = await res.json(); } catch { /* ignore */ }
+      if (!res.ok) { setError(json.error || 'Could not delete.'); return; }
+      router.refresh();
+    } catch { setError('Network error.'); }
+    finally { setBusy(false); }
   }
 
   const statusLabel =
@@ -70,6 +81,16 @@ export default function RequestCard({ request }) {
           <div className="handle">{subtitle}</div>
         </div>
         <span className="req-age">{formatAgo(request.created_at)}</span>
+        {!isDeleted && (
+          <button
+            className="req-delete"
+            title="Move to Deleted"
+            onClick={() => deleteRequest()}
+            disabled={busy}
+          >
+            🗑
+          </button>
+        )}
       </div>
 
       {request.reason && <p className="req-reason">{request.reason}</p>}
@@ -81,7 +102,16 @@ export default function RequestCard({ request }) {
 
       {error && <p className="error-msg">{error}</p>}
 
-      {request.status === 'pending' && (
+      {isDeleted ? (
+        <div className="req-actions">
+          <button className="btn-ghost" disabled={busy} onClick={() => respond('restore')}>
+            Restore
+          </button>
+          <button className="btn-deny" disabled={busy} onClick={() => deleteRequest({ permanent: true })}>
+            Delete forever
+          </button>
+        </div>
+      ) : request.status === 'pending' && (
         <>
           <div className="req-actions">
             <button className="btn-primary" disabled={busy} onClick={() => respond('approve')}>
@@ -90,11 +120,7 @@ export default function RequestCard({ request }) {
             <button className="btn-deny" disabled={busy} onClick={() => respond('deny')}>
               Decline
             </button>
-            <button
-              className="btn-ghost"
-              disabled={busy}
-              onClick={() => setShowRedirect((v) => !v)}
-            >
+            <button className="btn-ghost" disabled={busy} onClick={() => setShowRedirect((v) => !v)}>
               Redirect…
             </button>
           </div>
