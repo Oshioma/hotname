@@ -58,6 +58,13 @@ export async function POST(request) {
 
   // ── Sign up ───────────────────────────────────────────────────────────────
   if (action === 'signup') {
+    const consent = body?.messaging_consent === true || body?.messaging_consent === 'on';
+    if (!consent) {
+      return NextResponse.json(
+        { error: 'Please agree to the Terms and messaging policy to continue.' },
+        { status: 400 }
+      );
+    }
     if (!email || !password || !username) {
       return NextResponse.json({ error: 'Email, password and username are required.' }, { status: 400 });
     }
@@ -112,6 +119,8 @@ export async function POST(request) {
         display_name: display_name?.trim() || handle,
         email,
         phone_number: phone_number || null,
+        messaging_consent: true,
+        messaging_consent_at: new Date().toISOString(),
       });
       if (profileError) {
         // Roll back the auth user so they can retry with the same email.

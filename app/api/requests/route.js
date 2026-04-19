@@ -62,6 +62,20 @@ export async function POST(request) {
     return NextResponse.json({ error: 'You cannot message yourself.' }, { status: 400 });
   }
 
+  // Gate: there must be an accepted user-level connection between these two.
+  const { data: connection } = await service
+    .from('user_connections')
+    .select('status')
+    .eq('requester_id', user.id)
+    .eq('owner_id', owner.id)
+    .maybeSingle();
+  if (!connection || connection.status !== 'accepted') {
+    return NextResponse.json(
+      { error: 'Request a connection first.', needs_connection: true },
+      { status: 403 },
+    );
+  }
+
   const { data: channel } = await service
     .from('channels')
     .select('id, access_mode, value')

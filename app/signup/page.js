@@ -22,6 +22,13 @@ function SignupForm() {
     const username = data.get('username');
     const display_name = data.get('display_name');
     const phone_number = data.get('phone_number');
+    const messaging_consent = data.get('messaging_consent') === 'on';
+
+    if (!messaging_consent) {
+      setError('Please agree to the Terms and messaging policy to continue.');
+      setLoading(false);
+      return;
+    }
 
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), 15000);
@@ -30,7 +37,7 @@ function SignupForm() {
       const res = await fetch('/api/auth', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ action: 'signup', email, password, username, display_name, phone_number }),
+        body: JSON.stringify({ action: 'signup', email, password, username, display_name, phone_number, messaging_consent }),
         signal: controller.signal,
       });
 
@@ -117,6 +124,15 @@ function SignupForm() {
             Kept private. Only used to notify you when someone approves a WhatsApp or SMS request.
           </p>
         </div>
+
+        <label className="consent">
+          <input type="checkbox" name="messaging_consent" required />
+          <span>
+            I agree to the <Link href="/terms">Terms</Link> and acknowledge that messages
+            sent or received through Hotname may be delivered via WhatsApp, SMS, email
+            or post in line with the <a href="https://www.whatsapp.com/legal/business-policy" target="_blank" rel="noopener noreferrer">WhatsApp Business messaging policy</a>.
+          </span>
+        </label>
 
         <button className="btn-primary" type="submit" disabled={loading} style={{ width: '100%', marginTop: '0.5rem' }}>
           {loading ? 'Creating account…' : 'Create account'}

@@ -3,7 +3,8 @@ import Link from 'next/link';
 import { createClient } from '@/lib/supabase/server';
 import { createServiceClient } from '@/lib/supabase/service';
 import { CHANNEL_META, CHANNEL_ORDER, ACCESS_LABEL } from '@/lib/channelMeta';
-import MessageComposer from './MessageComposer';export async function generateMetadata({ params }) {
+import MessageComposer from './MessageComposer';
+import ConnectForm from './ConnectForm';export async function generateMetadata({ params }) {
   const { username } = await params;
   return {
     title: `@${username} — Hotname`,
@@ -49,17 +50,31 @@ export default async function ProfilePage({ params }) {
 
   // Existing request history for this viewer — show status chips inline
   let requestsByType = {};
+  let connection = null;
   if (viewer) {
-    const { data: reqs } = await service
-      .from('connection_requests')
-      .select('channel_type, status, created_at')
-      .eq('owner_id', profile.id)
-      .eq('requester_id', viewer.id)
-      .order('created_at', { ascending: false });
-    for (const r of reqs ?? []) {
+    const [reqsResult, connResult] = await Promise.all([
+      service
+        .from('connection_requests')
+        .select('channel_type, status, created_at')
+        .eq('owner_id', profile.id)
+        .eq('requester_id', viewer.id)
+        .order('created_at', { ascending: false }),
+      service
+        .from('user_connections')
+        .select('id, status, created_at')
+        .eq('requester_id', viewer.id)
+        .eq('owner_id', profile.id)
+        .maybeSingle(),
+    ]);
+    for (const r of reqsResult.data ?? []) {
       if (!requestsByType[r.channel_type]) requestsByType[r.channel_type] = r;
     }
+    connection = connResult.data ?? null;
   }
+
+  const isSelf = viewer && viewer.id === profile.id;
+  const connectionStatus = isSelf ? 'self' : (connection?.status ?? null);
+  const canMessage = connectionStatus === 'accepted';
 
   // Decide which channels this viewer can see + which delivery mode applies.
   //   mode = 'direct'  → Public channel, message delivers immediately
@@ -187,20 +202,27 @@ export default async function ProfilePage({ params }) {
       )}
 
       <div className="request-box">
-        {viewer && viewer.id === profile.id ? (
+        {isSelf ? (
           <div className="auth-nudge">
             This is your own profile. <Link href="/channels">Edit your channels →</Link>
           </div>
-        ) : composerChannels.length === 0 ? (
-          channels.length === 0 ? (
-            <div className="empty">@{profile.username} isn&apos;t accepting messages right now.</div>
-          ) : null
+        ) : canMessage ? (
+          composerChannels.length === 0 ? (
+            <div className="empty">@{profile.username} hasn&apos;t opened any message channels.</div>
+          ) : (
+            <MessageComposer
+              ownerUsername={profile.username}
+              channels={composerChannels}
+              recentStatuses={requestsByType}
+              viewerLoggedIn={!!viewer}
+            />
+          )
         ) : (
-          <MessageComposer
+          <ConnectForm
             ownerUsername={profile.username}
-            channels={composerChannels}
-            recentStatuses={requestsByType}
+            ownerDisplayName={profile.display_name || profile.username}
             viewerLoggedIn={!!viewer}
+            status={connectionStatus}
           />
         )}
       </div>

@@ -4,6 +4,7 @@ import { createClient } from '@/lib/supabase/server';
 import { CHANNEL_META } from '@/lib/channelMeta';
 import RequestCard from '../requests/RequestCard';
 import InlineSearch from './InlineSearch';
+import ConnectionCard from './ConnectionCard';
 
 export default async function DashboardPage() {
   const supabase = await createClient();
@@ -18,7 +19,7 @@ export default async function DashboardPage() {
 
   const username = profile?.username ?? null;
 
-  const [channelsResult, inboxResult, pendingResult] = await Promise.all([
+  const [channelsResult, inboxResult, pendingResult, connectionsResult] = await Promise.all([
     supabase
       .from('channels')
       .select('type, access_mode')
@@ -34,11 +35,19 @@ export default async function DashboardPage() {
       .select('id', { count: 'exact', head: true })
       .eq('owner_id', user.id)
       .eq('status', 'pending'),
+    supabase
+      .from('user_connections')
+      .select('id, requester_username, message, created_at')
+      .eq('owner_id', user.id)
+      .eq('status', 'pending')
+      .order('created_at', { ascending: false })
+      .limit(10),
   ]);
 
   const channels = channelsResult.data ?? [];
   const inbox = inboxResult.data ?? [];
   const pendingCount = pendingResult.count ?? 0;
+  const pendingConnections = connectionsResult.data ?? [];
   const openCount = channels.filter((c) => c.access_mode !== 'hidden').length;
 
   const initials = (profile?.display_name || profile?.username || user.email)
@@ -110,6 +119,16 @@ export default async function DashboardPage() {
             <div className="val" style={{ fontSize: '14px', fontFamily: 'ui-monospace, monospace' }}>@{username} →</div>
           </Link>
         </div>
+
+        {/* Connection requests */}
+        {pendingConnections.length > 0 && (
+          <>
+            <h2 style={{ marginTop: '1.8rem' }}>Connection requests</h2>
+            <div className="req-list" style={{ marginBottom: '0.5rem' }}>
+              {pendingConnections.map((c) => <ConnectionCard key={c.id} connection={c} />)}
+            </div>
+          </>
+        )}
 
         {/* Inbox */}
         <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', marginTop: '1.8rem', marginBottom: '0.85rem' }}>

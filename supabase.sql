@@ -11,15 +11,17 @@
 -- PROFILES
 -- ─────────────────────────────────────────────
 create table if not exists profiles (
-  id           uuid primary key references auth.users(id) on delete cascade,
-  username     text unique not null,                 -- the Hotname (lowercase)
-  display_name text,
-  bio          text,                                 -- short status line under the name
-  location     text,                                 -- optional free-form location
-  email        text,
-  phone_number text,
-  verified     boolean not null default false,       -- email/phone verified trust marker
-  created_at   timestamptz default now()
+  id                      uuid primary key references auth.users(id) on delete cascade,
+  username                text unique not null,                 -- the Hotname (lowercase)
+  display_name            text,
+  bio                     text,                                 -- short status line under the name
+  location                text,                                 -- optional free-form location
+  email                   text,
+  phone_number            text,
+  verified                boolean not null default false,       -- email/phone verified trust marker
+  messaging_consent       boolean not null default false,       -- agreed to Terms + WhatsApp policy
+  messaging_consent_at    timestamptz,
+  created_at              timestamptz default now()
 );
 
 alter table profiles enable row level security;
@@ -135,4 +137,44 @@ create policy "Owner and requester can read their requests"
 
 create policy "Owner can update (approve/deny/redirect) requests"
   on connection_requests for update
+  using (auth.uid() = owner_id);
+
+-- ─────────────────────────────────────────────
+-- USER CONNECTIONS
+-- Gatekeeper layer above messaging. Viewers must first request to
+-- connect; only once the owner accepts can they send messages through
+-- any of the owner's channels.
+-- ─────────────────────────────────────────────
+create table if not exists user_connections (
+  id                  uuid primary key default gen_random_uuid(),
+  requester_id        uuid not null references auth.users(id) on delete cascade,
+  requester_username  text not null,
+  owner_id            uuid not null references auth.users(id) on delete cascade,
+  owner_username      text not null,
+  message             text,
+  status              text not null default 'pending' check (status in (
+    'pending', 'accepted', 'declined'
+  )),
+  created_at          timestamptz default now(),
+  responded_at        timestamptz,
+  unique(requester_id, owner_id)
+);
+
+create index if not exists user_connections_owner_idx
+  on user_connections(owner_id, status, created_at desc);
+create index if not exists user_connections_requester_idx
+  on user_connections(requester_id, created_at desc);
+
+alter table user_connections enable row level security;
+
+create policy "Requester can insert own connection"
+  on user_connections for insert to authenticated
+  with check (auth.uid() = requester_id);
+
+create policy "Owner and requester can read their connections"
+  on user_connections for select
+  using (auth.uid() = owner_id or auth.uid() = requester_id);
+
+create policy "Owner can update (accept/decline) connections"
+  on user_connections for update
   using (auth.uid() = owner_id);
