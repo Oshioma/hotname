@@ -11,17 +11,19 @@
 -- PROFILES
 -- ─────────────────────────────────────────────
 create table if not exists profiles (
-  id                      uuid primary key references auth.users(id) on delete cascade,
-  username                text unique not null,                 -- the Hotname (lowercase)
-  display_name            text,
-  bio                     text,                                 -- short status line under the name
-  location                text,                                 -- optional free-form location
-  email                   text,
-  phone_number            text,
-  verified                boolean not null default false,       -- email/phone verified trust marker
-  messaging_consent       boolean not null default false,       -- agreed to Terms + WhatsApp policy
-  messaging_consent_at    timestamptz,
-  created_at              timestamptz default now()
+  id                         uuid primary key references auth.users(id) on delete cascade,
+  username                   text unique not null,                 -- the Hotname (lowercase)
+  display_name               text,
+  bio                        text,                                 -- short status line under the name
+  location                   text,                                 -- optional free-form location
+  email                      text,
+  phone_number               text,
+  verified                   boolean not null default false,       -- email/phone verified trust marker
+  messaging_consent          boolean not null default false,       -- agreed to Terms + WhatsApp policy
+  messaging_consent_at       timestamptz,
+  messaging_consent_ip       text,                                 -- audit: ip at time of consent
+  messaging_consent_ua       text,                                 -- audit: user agent at time of consent
+  created_at                 timestamptz default now()
 );
 
 alter table profiles enable row level security;

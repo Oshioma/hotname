@@ -113,6 +113,14 @@ export async function POST(request) {
     // Use the service role client so the insert works whether or not the
     // user has an active session yet (email confirmation may be enabled).
     if (data.user) {
+      const headers = request.headers;
+      const ip =
+        headers.get('x-forwarded-for')?.split(',')[0]?.trim() ||
+        headers.get('x-real-ip') ||
+        headers.get('cf-connecting-ip') ||
+        null;
+      const ua = headers.get('user-agent') || null;
+
       const { error: profileError } = await service.from('profiles').insert({
         id: data.user.id,
         username: handle,
@@ -121,6 +129,8 @@ export async function POST(request) {
         phone_number: phone_number || null,
         messaging_consent: true,
         messaging_consent_at: new Date().toISOString(),
+        messaging_consent_ip: ip,
+        messaging_consent_ua: ua,
       });
       if (profileError) {
         // Roll back the auth user so they can retry with the same email.

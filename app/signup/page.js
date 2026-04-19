@@ -128,9 +128,11 @@ function SignupForm() {
         <label className="consent">
           <input type="checkbox" name="messaging_consent" required />
           <span>
-            I agree to the <Link href="/terms">Terms</Link> and acknowledge that messages
-            sent or received through Hotname may be delivered via WhatsApp, SMS, email
-            or post in line with the <a href="https://www.whatsapp.com/legal/business-policy" target="_blank" rel="noopener noreferrer">WhatsApp Business messaging policy</a>.
+            I agree to the <Link href="/terms">Terms</Link> and consent to receive messages
+            through Hotname on the channels I open — including{' '}
+            <strong>WhatsApp</strong>, <strong>SMS</strong>, <strong>Email</strong> and{' '}
+            <strong>Post</strong> — in line with the{' '}
+            <a href="https://www.whatsapp.com/legal/business-policy" target="_blank" rel="noopener noreferrer">WhatsApp Business messaging policy</a>.
           </span>
         </label>
 
