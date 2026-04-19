@@ -162,22 +162,18 @@ export default async function ProfilePage({ params }) {
       </section>
 
       {channels.length > 0 && (() => {
-        const modeLabel = (mode) =>
-          mode === 'direct'   ? ACCESS_LABEL.open :
-          mode === 'allowed'  ? ACCESS_LABEL.selected :
-          mode === 'approval' ? ACCESS_LABEL.request :
-          '';
-
+        // Split by intent, not by 'has a link':
+        //   Message → anything Hotname can route a message to (WhatsApp, SMS,
+        //             Email, Post, any Request-mode channel).
+        //   Links   → everything else (Instagram, Website, Telegram, Signal,
+        //             Voice call, Booking) — places you go, not message to.
         const linkChannels = [];
         const messageChannels = [];
         for (const ch of channels) {
           const meta = CHANNEL_META[ch.type];
           if (!meta) continue;
-          const canLinkOut =
-            (ch.mode === 'direct' || ch.mode === 'allowed') &&
-            ch.value &&
-            typeof meta.valueToLink === 'function';
-          (canLinkOut ? linkChannels : messageChannels).push(ch);
+          if (meta.deliverable || ch.mode === 'approval') messageChannels.push(ch);
+          else linkChannels.push(ch);
         }
 
         return (
@@ -188,19 +184,29 @@ export default async function ProfilePage({ params }) {
                 <div className="available-on-chips">
                   {linkChannels.map((ch) => {
                     const meta = CHANNEL_META[ch.type];
-                    const href = meta.valueToLink(ch.value);
-                    const opensExternal = meta.kind === 'url' || meta.kind === 'handle';
+                    const canLinkOut =
+                      (ch.mode === 'direct' || ch.mode === 'allowed') &&
+                      ch.value &&
+                      typeof meta.valueToLink === 'function';
+                    if (canLinkOut) {
+                      const href = meta.valueToLink(ch.value);
+                      const opensExternal = meta.kind === 'url' || meta.kind === 'handle';
+                      return (
+                        <a
+                          key={ch.type}
+                          href={href}
+                          target={opensExternal ? '_blank' : undefined}
+                          rel={opensExternal ? 'noopener noreferrer' : undefined}
+                          className={`avail-chip avail-${ch.mode} avail-clickable`}
+                        >
+                          {meta.label}
+                        </a>
+                      );
+                    }
                     return (
-                      <a
-                        key={ch.type}
-                        href={href}
-                        target={opensExternal ? '_blank' : undefined}
-                        rel={opensExternal ? 'noopener noreferrer' : undefined}
-                        className={`avail-chip avail-${ch.mode} avail-clickable`}
-                      >
+                      <span key={ch.type} className={`avail-chip avail-${ch.mode}`}>
                         {meta.label}
-                        <span className="avail-chip-mode">· {modeLabel(ch.mode)}</span>
-                      </a>
+                      </span>
                     );
                   })}
                 </div>
@@ -216,7 +222,6 @@ export default async function ProfilePage({ params }) {
                     return (
                       <span key={ch.type} className={`avail-chip avail-${ch.mode}`}>
                         {meta.label}
-                        <span className="avail-chip-mode">· {modeLabel(ch.mode)}</span>
                       </span>
                     );
                   })}
