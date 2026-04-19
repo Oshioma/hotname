@@ -14,7 +14,7 @@ const MAX = 500;
  *   - 'approval' (Request) → stored as a pending request for the owner to
  *                            approve or decline before it's delivered
  */
-export default function MessageComposer({ ownerUsername, channels, recentStatuses = {} }) {
+export default function MessageComposer({ ownerUsername, channels, recentStatuses = {}, viewerLoggedIn = true }) {
   const router = useRouter();
   const [channel, setChannel] = useState(channels[0]?.type ?? '');
   const [body, setBody] = useState('');
@@ -27,6 +27,14 @@ export default function MessageComposer({ ownerUsername, channels, recentStatuse
 
   async function handleSubmit(e) {
     e.preventDefault();
+
+    // Not signed in → bounce to login, preserving where they came from.
+    if (!viewerLoggedIn) {
+      const next = encodeURIComponent(`/${ownerUsername}`);
+      router.push(`/login?next=${next}`);
+      return;
+    }
+
     if (!channel || !body.trim()) return;
     setError('');
     setLoading(true);
@@ -115,12 +123,17 @@ export default function MessageComposer({ ownerUsername, channels, recentStatuse
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '10px' }}>
         <span style={{ fontSize: '11px', color: 'var(--text-soft)' }}>
           {body.length} / {MAX}
-          {mode === 'approval' && ' · requires approval'}
-          {mode === 'direct' && ' · delivered right away'}
-          {mode === 'allowed' && ' · delivered right away'}
+          {viewerLoggedIn && mode === 'approval' && ' · requires approval'}
+          {viewerLoggedIn && mode === 'direct' && ' · delivered right away'}
+          {viewerLoggedIn && mode === 'allowed' && ' · delivered right away'}
+          {!viewerLoggedIn && ' · sign in to send'}
         </span>
-        <button className="btn-primary" type="submit" disabled={loading || !body.trim() || !channel}>
-          {loading ? 'Sending…' : (mode === 'approval' ? 'Request' : 'Send')}
+        <button
+          className="btn-primary"
+          type="submit"
+          disabled={viewerLoggedIn && (loading || !body.trim() || !channel)}
+        >
+          {!viewerLoggedIn ? 'Sign in to send' : (loading ? 'Sending…' : (mode === 'approval' ? 'Request' : 'Send'))}
         </button>
       </div>
     </form>

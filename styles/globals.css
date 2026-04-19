@@ -660,6 +660,21 @@ nav {
   font-weight: 400;
   opacity: 0.75;
 }
+.avail-clickable {
+  text-decoration: none;
+  cursor: pointer;
+  transition: transform .12s, box-shadow .15s;
+}
+.avail-clickable:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 2px 8px rgba(20,20,30,0.06);
+}
+.avail-clickable::after {
+  content: '↗';
+  margin-left: 4px;
+  font-size: 11px;
+  opacity: 0.55;
+}
 
 /* Request-connection section */
 .request-box {

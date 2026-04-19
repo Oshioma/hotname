@@ -37,12 +37,13 @@ export default async function ProfilePage({ params }) {
     viewerUsername = vp?.username ?? null;
   }
 
-  // Pull every channel that could be visible to someone — we never expose
-  // the raw value on this page; we only expose the channel type the viewer
-  // can use to send a message through Hotname.
+  // Pull every channel that could be visible. For Public channels we also
+  // pull the raw value so the chip can be clickable (mailto, Instagram URL,
+  // website, etc.). For Request / Invite the value is never sent to the
+  // client.
   const { data: channelRows } = await service
     .from('channels')
-    .select('id, type, access_mode')
+    .select('id, type, value, access_mode')
     .eq('user_id', profile.id)
     .neq('access_mode', 'hidden');
 
@@ -67,7 +68,8 @@ export default async function ProfilePage({ params }) {
   const channels = [];
   for (const ch of channelRows ?? []) {
     if (ch.access_mode === 'open') {
-      channels.push({ type: ch.type, mode: 'direct' });
+      // Public — expose the raw value so the chip can link out
+      channels.push({ type: ch.type, mode: 'direct', value: ch.value ?? null });
     } else if (ch.access_mode === 'request') {
       channels.push({ type: ch.type, mode: 'approval' });
     } else if (ch.access_mode === 'selected' && viewerUsername) {
@@ -77,7 +79,8 @@ export default async function ProfilePage({ params }) {
         .eq('channel_id', ch.id)
         .eq('allowed_username', viewerUsername)
         .maybeSingle();
-      if (access) channels.push({ type: ch.type, mode: 'allowed' });
+      // Invite + allowlisted — they can see the raw value
+      if (access) channels.push({ type: ch.type, mode: 'allowed', value: ch.value ?? null });
     }
   }
 
@@ -136,6 +139,25 @@ export default async function ProfilePage({ params }) {
                 ch.mode === 'allowed'  ? ACCESS_LABEL.selected :
                 ch.mode === 'approval' ? ACCESS_LABEL.request :
                 '';
+              const canLinkOut = (ch.mode === 'direct' || ch.mode === 'allowed') && ch.value;
+
+              if (canLinkOut) {
+                const href = meta.valueToLink(ch.value);
+                const opensExternal = meta.kind === 'url' || meta.kind === 'handle';
+                return (
+                  <a
+                    key={ch.type}
+                    href={href}
+                    target={opensExternal ? '_blank' : undefined}
+                    rel={opensExternal ? 'noopener noreferrer' : undefined}
+                    className={`avail-chip avail-${ch.mode} avail-clickable`}
+                  >
+                    {meta.label}
+                    <span className="avail-chip-mode">· {modeLabel}</span>
+                  </a>
+                );
+              }
+
               return (
                 <span key={ch.type} className={`avail-chip avail-${ch.mode}`}>
                   {meta.label}
@@ -148,12 +170,7 @@ export default async function ProfilePage({ params }) {
       )}
 
       <div className="request-box">
-        {!viewer ? (
-          <div className="auth-nudge">
-            To reach @{profile.username}, <Link href={`/signup?next=/${profile.username}`}>create an account</Link> or{' '}
-            <Link href={`/login?next=/${profile.username}`}>sign in</Link>. Hotname keeps their details private — messages are routed through us.
-          </div>
-        ) : viewer.id === profile.id ? (
+        {viewer && viewer.id === profile.id ? (
           <div className="auth-nudge">
             This is your own profile. <Link href="/channels">Edit your channels →</Link>
           </div>
@@ -164,6 +181,7 @@ export default async function ProfilePage({ params }) {
             ownerUsername={profile.username}
             channels={channels}
             recentStatuses={requestsByType}
+            viewerLoggedIn={!!viewer}
           />
         )}
       </div>
