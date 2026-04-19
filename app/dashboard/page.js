@@ -88,18 +88,20 @@ export default async function DashboardPage() {
             <div className="identity-handle">@{username}</div>
             {profile?.bio && <p className="identity-bio">{profile.bio}</p>}
             {shareDisplay && (
-              <div className="identity-link">{shareDisplay}</div>
+              <div className="identity-link-row">
+                <Link href={`/${username}`} target="_blank" className="identity-link">
+                  {shareDisplay}
+                </Link>
+                <Link href={`/${username}`} target="_blank" className="identity-view">
+                  View profile →
+                </Link>
+              </div>
             )}
           </div>
           {username && (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-              <Link href={`/${username}`} target="_blank">
-                <button className="btn-outline" style={{ fontSize: '13px', padding: '8px 16px' }}>View public profile</button>
-              </Link>
-              <Link href="/settings">
-                <button className="btn-quiet" style={{ fontSize: '12px' }}>Edit profile</button>
-              </Link>
-            </div>
+            <Link href="/settings">
+              <button className="btn-quiet" style={{ fontSize: '12px' }}>Edit profile</button>
+            </Link>
           )}
         </div>
 

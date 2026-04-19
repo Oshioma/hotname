@@ -557,8 +557,14 @@ nav {
   margin-bottom: 6px;
 }
 .identity-bio { font-size: 13px; color: var(--text-muted); }
-.identity-link {
+.identity-link-row {
   margin-top: 10px;
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+.identity-link {
   display: inline-flex;
   align-items: center;
   gap: 6px;
@@ -569,7 +575,21 @@ nav {
   padding: 6px 12px;
   border-radius: 999px;
   font-family: ui-monospace, monospace;
+  text-decoration: none;
+  transition: border-color .15s, color .15s, background .15s;
 }
+.identity-link:hover {
+  border-color: var(--border-2);
+  color: var(--text);
+  background: #fff;
+}
+.identity-view {
+  font-size: 12px;
+  color: var(--accent-text);
+  font-weight: 500;
+  text-decoration: none;
+}
+.identity-view:hover { text-decoration: underline; }
 
 /* Quick stats row */
 .quick-grid {
