@@ -82,6 +82,7 @@ nav {
   flex-shrink: 0;
 }
 .logo-mark svg { display: block; }
+.logo-accent { color: var(--accent); }
 .nav-actions { display: flex; gap: 8px; align-items: center; }
 
 /* Nav variant with a search bar in the middle */

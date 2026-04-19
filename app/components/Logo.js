@@ -17,7 +17,7 @@ export default function Logo() {
           />
         </svg>
       </span>
-      hotname
+      hot<span className="logo-accent">name</span>
     </span>
   );
 }
