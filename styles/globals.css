@@ -849,6 +849,11 @@ nav {
   padding: 8px 12px;
   margin-bottom: 10px;
 }
+.self-banner-footer {
+  max-width: 520px;
+  margin: 2rem auto 0.5rem;
+  padding: 10px 14px;
+}
 
 /* Sent state */
 .sent-card {

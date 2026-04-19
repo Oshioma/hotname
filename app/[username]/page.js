@@ -233,15 +233,6 @@ export default async function ProfilePage({ params }) {
       })()}
 
       <div className="request-box">
-        {isSelf && (
-          <div className="self-banner">
-            <span>This is your own profile — preview of what others see.</span>
-            <Link href="/channels" style={{ color: 'var(--accent-text)', fontSize: '12px' }}>
-              Edit channels →
-            </Link>
-          </div>
-        )}
-
         {canMessage ? (
           composerChannels.length === 0 ? (
             <div className="empty">
@@ -267,6 +258,15 @@ export default async function ProfilePage({ params }) {
           />
         )}
       </div>
+
+      {isSelf && (
+        <div className="self-banner self-banner-footer">
+          <span>This is your own profile — preview of what others see.</span>
+          <Link href="/channels" style={{ color: 'var(--accent-text)', fontSize: '12px' }}>
+            Edit channels →
+          </Link>
+        </div>
+      )}
 
       <div className="profile-footer">
         <Link href="/">Powered by hotname · You never see their details.</Link>
