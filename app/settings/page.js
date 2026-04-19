@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { createClient } from '@/lib/supabase/client';
+import Logo from '@/app/components/Logo';
 
 const MAX_BIO = 140;
 
@@ -72,7 +73,7 @@ export default function SettingsPage() {
     return (
       <>
         <nav>
-          <Link href="/dashboard"><span className="logo">hotname<span className="logo-dot" /></span></Link>
+          <Link href="/dashboard"><Logo /></Link>
         </nav>
         <div className="form-wrap"><p style={{ color: 'var(--text-muted)' }}>Loading…</p></div>
       </>
@@ -82,7 +83,7 @@ export default function SettingsPage() {
   return (
     <>
       <nav>
-        <Link href="/dashboard"><span className="logo">hotname<span className="logo-dot" /></span></Link>
+        <Link href="/dashboard"><Logo /></Link>
         <div className="nav-actions">
           <Link href="/dashboard"><button className="btn-ghost">← Dashboard</button></Link>
         </div>
@@ -94,7 +95,7 @@ export default function SettingsPage() {
           <p className="sub">What people see when they visit your Hotname.</p>
 
           {error && <p className="error-msg">{error}</p>}
-          {success && <p style={{ fontSize: '12px', color: 'var(--ok)', marginBottom: '10px' }}>{success}</p>}
+          {success && <p style={{ fontSize: '13px', color: 'var(--ok)', marginBottom: '10px' }}>{success}</p>}
 
           <form onSubmit={handleSave}>
             <div className="field">
@@ -105,7 +106,7 @@ export default function SettingsPage() {
                 disabled
                 style={{ opacity: 0.5, cursor: 'not-allowed' }}
               />
-              <p style={{ fontSize: '11px', color: 'var(--text-soft)', marginTop: '4px' }}>
+              <p style={{ fontSize: '12px', color: 'var(--text-soft)', marginTop: '4px' }}>
                 Hotnames are permanent.
               </p>
             </div>
@@ -154,7 +155,7 @@ export default function SettingsPage() {
                 pattern="\+[0-9]{7,15}"
                 title="E.164 format: start with + and country code"
               />
-              <p style={{ fontSize: '11px', color: 'var(--text-soft)', marginTop: '4px' }}>
+              <p style={{ fontSize: '12px', color: 'var(--text-soft)', marginTop: '4px' }}>
                 Used privately to notify you about approved WhatsApp / SMS requests. Never shown unless you make it a channel.
               </p>
             </div>

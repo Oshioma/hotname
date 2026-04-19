@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
 import ChannelRow from './ChannelRow';
+import Logo from '@/app/components/Logo';
 
 export default function ChannelsPage() {
   const [channels, setChannels] = useState([]);
@@ -27,7 +28,7 @@ export default function ChannelsPage() {
   return (
     <>
       <nav>
-        <Link href="/dashboard"><span className="logo">hotname<span className="logo-dot" /></span></Link>
+        <Link href="/dashboard"><Logo /></Link>
         <div className="nav-actions">
           <Link href="/dashboard"><button className="btn-ghost">← Dashboard</button></Link>
         </div>

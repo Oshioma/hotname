@@ -121,7 +121,7 @@ export default function MessageComposer({ ownerUsername, channels, recentStatuse
       />
 
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '10px' }}>
-        <span style={{ fontSize: '11px', color: 'var(--text-soft)' }}>
+        <span style={{ fontSize: '12px', color: 'var(--text-soft)' }}>
           {body.length} / {MAX}
           {viewerLoggedIn && mode === 'approval' && ' · requires approval'}
           {viewerLoggedIn && mode === 'direct' && ' · delivered right away'}

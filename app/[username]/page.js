@@ -4,7 +4,8 @@ import { createClient } from '@/lib/supabase/server';
 import { createServiceClient } from '@/lib/supabase/service';
 import { CHANNEL_META, CHANNEL_ORDER, ACCESS_LABEL } from '@/lib/channelMeta';
 import MessageComposer from './MessageComposer';
-import ConnectForm from './ConnectForm';export async function generateMetadata({ params }) {
+import ConnectForm from './ConnectForm';
+import Logo from '@/app/components/Logo';export async function generateMetadata({ params }) {
   const { username } = await params;
   return {
     title: `@${username} — Hotname`,
@@ -128,7 +129,7 @@ export default async function ProfilePage({ params }) {
   return (
     <div className="profile-page">
       <nav>
-        <Link href="/"><span className="logo">hotname<span className="logo-dot" /></span></Link>
+        <Link href="/"><Logo /></Link>
         <div className="nav-actions">
           {viewer ? (
             <Link href="/dashboard"><button className="btn-ghost">Dashboard</button></Link>

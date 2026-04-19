@@ -3,6 +3,7 @@
 import { Suspense, useState } from 'react';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
+import Logo from '@/app/components/Logo';
 
 function SignupForm() {
   const router = useRouter();
@@ -84,7 +85,7 @@ function SignupForm() {
               autoCorrect="off"
             />
           </div>
-          <p style={{ fontSize: '11px', color: 'var(--text-soft)', marginTop: '4px' }}>
+          <p style={{ fontSize: '12px', color: 'var(--text-soft)', marginTop: '4px' }}>
             3–30 characters, letters/numbers/underscore. Permanent.
           </p>
         </div>
@@ -120,7 +121,7 @@ function SignupForm() {
             title="E.164 format: start with + and country code"
             autoComplete="tel"
           />
-          <p style={{ fontSize: '11px', color: 'var(--text-soft)', marginTop: '4px' }}>
+          <p style={{ fontSize: '12px', color: 'var(--text-soft)', marginTop: '4px' }}>
             Kept private. Only used to notify you when someone approves a WhatsApp or SMS request.
           </p>
         </div>
@@ -150,7 +151,7 @@ export default function SignupPage() {
   return (
     <>
       <nav>
-        <Link href="/"><span className="logo">hotname<span className="logo-dot" /></span></Link>
+        <Link href="/"><Logo /></Link>
         <div className="nav-actions">
           <Link href="/login"><button className="btn-ghost">Log in</button></Link>
         </div>

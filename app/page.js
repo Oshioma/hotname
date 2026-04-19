@@ -1,10 +1,11 @@
 import Link from 'next/link';
+import Logo from '@/app/components/Logo';
 
 export default function Home() {
   return (
     <>
       <nav>
-        <Link href="/"><span className="logo">hotname<span className="logo-dot" /></span></Link>
+        <Link href="/"><Logo /></Link>
         <div className="nav-actions">
           <Link href="/find"><button className="btn-ghost">Find a Hotname</button></Link>
           <Link href="/login"><button className="btn-ghost">Log in</button></Link>

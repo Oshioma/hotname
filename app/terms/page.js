@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import Logo from '@/app/components/Logo';
 
 export const metadata = {
   title: 'Terms — Hotname',
@@ -9,7 +10,7 @@ export default function TermsPage() {
   return (
     <>
       <nav>
-        <Link href="/"><span className="logo">hotname<span className="logo-dot" /></span></Link>
+        <Link href="/"><Logo /></Link>
       </nav>
 
       <div className="page" style={{ maxWidth: 720 }}>

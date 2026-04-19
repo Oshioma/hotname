@@ -5,6 +5,7 @@ import { CHANNEL_META } from '@/lib/channelMeta';
 import RequestCard from '../requests/RequestCard';
 import InlineSearch from './InlineSearch';
 import ConnectionCard from './ConnectionCard';
+import Logo from '@/app/components/Logo';
 
 export default async function DashboardPage() {
   const supabase = await createClient();
@@ -65,7 +66,7 @@ export default async function DashboardPage() {
   return (
     <>
       <nav className="nav-with-search">
-        <Link href="/dashboard"><span className="logo">hotname<span className="logo-dot" /></span></Link>
+        <Link href="/dashboard"><Logo /></Link>
         <div className="nav-search">
           <InlineSearch placeholder="Find a Hotname — @handle or name" />
         </div>

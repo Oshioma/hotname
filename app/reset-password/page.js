@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
+import Logo from '@/app/components/Logo';
 
 export default function ResetPasswordPage() {
   const router = useRouter();
@@ -51,7 +52,7 @@ export default function ResetPasswordPage() {
   return (
     <>
       <nav>
-        <Link href="/"><span className="logo">hotname<span className="logo-dot" /></span></Link>
+        <Link href="/"><Logo /></Link>
       </nav>
       <div className="form-wrap">
         <div className="card">

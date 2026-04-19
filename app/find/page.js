@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
+import Logo from '@/app/components/Logo';
 
 export default function FindPage() {
   const router = useRouter();
@@ -70,7 +71,7 @@ export default function FindPage() {
   return (
     <>
       <nav>
-        <Link href="/"><span className="logo">hotname<span className="logo-dot" /></span></Link>
+        <Link href="/"><Logo /></Link>
         <div className="nav-actions">
           <Link href="/login"><button className="btn-ghost">Log in</button></Link>
           <Link href="/signup"><button className="btn-primary">Claim yours</button></Link>

@@ -61,20 +61,27 @@ nav {
   margin: 0 auto;
 }
 .logo {
-  font-size: 1.05rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 1.1rem;
   font-weight: 600;
   letter-spacing: -0.01em;
   color: var(--text);
   cursor: pointer;
 }
-.logo-dot {
-  display: inline-block;
-  width: 6px; height: 6px;
+.logo-mark {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 8px;
   background: var(--accent);
-  border-radius: 50%;
-  margin-left: 2px;
-  vertical-align: 1px;
+  color: #fff;
+  flex-shrink: 0;
 }
+.logo-mark svg { display: block; }
 .nav-actions { display: flex; gap: 8px; align-items: center; }
 
 /* Nav variant with a search bar in the middle */
@@ -210,7 +217,7 @@ nav {
 .field { margin-bottom: 1rem; }
 .field label {
   display: block;
-  font-size: 12px;
+  font-size: 13px;
   color: var(--text-muted);
   margin-bottom: 6px;
   font-weight: 500;
@@ -296,19 +303,19 @@ nav {
   padding: 1.3rem;
 }
 .how-step .n {
-  font-size: 12px;
+  font-size: 13px;
   color: var(--text-soft);
   font-variant-numeric: tabular-nums;
   margin-bottom: 10px;
 }
 .how-step h3 {
-  font-size: 15px;
+  font-size: 16px;
   font-weight: 600;
   margin-bottom: 4px;
   letter-spacing: -0.01em;
 }
 .how-step p {
-  font-size: 13px;
+  font-size: 14px;
   color: var(--text-muted);
   line-height: 1.55;
 }
@@ -319,7 +326,7 @@ nav {
   gap: 22px;
   padding: 0 1.5rem 3rem;
   color: var(--text-soft);
-  font-size: 12px;
+  font-size: 13px;
   flex-wrap: wrap;
 }
 
@@ -436,7 +443,7 @@ nav {
   text-overflow: ellipsis;
 }
 .search-result-handle {
-  font-size: 12px;
+  font-size: 13px;
   color: var(--text-muted);
   font-family: ui-monospace, monospace;
 }
@@ -509,7 +516,7 @@ nav {
   padding: 1rem 1.5rem 4rem;
 }
 .page h2 {
-  font-size: 12px;
+  font-size: 13px;
   font-weight: 500;
   color: var(--text-soft);
   text-transform: uppercase;
@@ -556,7 +563,7 @@ nav {
   font-family: ui-monospace, monospace;
   margin-bottom: 6px;
 }
-.identity-bio { font-size: 13px; color: var(--text-muted); }
+.identity-bio { font-size: 14px; color: var(--text-muted); }
 .identity-link-row {
   margin-top: 10px;
   display: inline-flex;
@@ -568,7 +575,7 @@ nav {
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  font-size: 12px;
+  font-size: 13px;
   color: var(--text-muted);
   background: var(--surface-2);
   border: 1px solid var(--border);
@@ -584,7 +591,7 @@ nav {
   background: #fff;
 }
 .identity-view {
-  font-size: 12px;
+  font-size: 13px;
   color: var(--accent-text);
   font-weight: 500;
   text-decoration: none;
@@ -608,9 +615,9 @@ nav {
   transition: border-color .15s;
 }
 .quick-card:hover { border-color: var(--border-2); }
-.quick-card .label { font-size: 12px; color: var(--text-soft); margin-bottom: 4px; }
-.quick-card .val { font-size: 20px; font-weight: 600; letter-spacing: -0.015em; }
-.quick-card .val small { font-size: 12px; color: var(--text-muted); font-weight: 400; margin-left: 4px; }
+.quick-card .label { font-size: 13px; color: var(--text-soft); margin-bottom: 4px; }
+.quick-card .val { font-size: 22px; font-weight: 600; letter-spacing: -0.015em; }
+.quick-card .val small { font-size: 13px; color: var(--text-muted); font-weight: 400; margin-left: 4px; }
 
 /* ─── PUBLIC PROFILE ─── */
 .profile-page {
@@ -643,17 +650,17 @@ nav {
   margin-bottom: 2px;
 }
 .profile-handle {
-  font-size: 13px;
+  font-size: 14px;
   color: var(--accent-text);
   font-family: ui-monospace, monospace;
   margin-bottom: 8px;
 }
 .profile-status {
-  font-size: 14px;
+  font-size: 15px;
   color: var(--text-muted);
   max-width: 380px;
   margin: 0 auto;
-  line-height: 1.45;
+  line-height: 1.5;
 }
 .trust-chips {
   display: inline-flex;
@@ -663,7 +670,7 @@ nav {
   justify-content: center;
 }
 .trust-chip {
-  font-size: 11px;
+  font-size: 12px;
   color: var(--ok);
   background: var(--ok-soft);
   padding: 3px 10px;
@@ -701,10 +708,10 @@ nav {
   align-items: center;
   gap: 10px;
 }
-.channel-row-hint { font-size: 12px; color: var(--text-soft); margin-top: 2px; }
+.channel-row-hint { font-size: 13px; color: var(--text-soft); margin-top: 2px; }
 
 .access-badge {
-  font-size: 12px;
+  font-size: 13px;
   font-weight: 500;
   padding: 4px 12px;
   border-radius: 999px;
@@ -902,7 +909,7 @@ nav {
   text-align: center;
   padding: 1rem 1.5rem 1.5rem;
   color: var(--text-soft);
-  font-size: 11px;
+  font-size: 12px;
 }
 .profile-footer a { color: var(--text-muted); }
 .profile-footer a:hover { color: var(--text); }
@@ -934,9 +941,9 @@ nav {
   flex-shrink: 0;
 }
 .req-who { flex: 1; min-width: 0; }
-.req-who .name { font-size: 14px; font-weight: 600; }
-.req-who .handle { font-size: 12px; color: var(--text-muted); font-family: ui-monospace, monospace; }
-.req-age { font-size: 11px; color: var(--text-soft); }
+.req-who .name { font-size: 15px; font-weight: 600; }
+.req-who .handle { font-size: 13px; color: var(--text-muted); font-family: ui-monospace, monospace; }
+.req-age { font-size: 12px; color: var(--text-soft); }
 .req-delete {
   background: transparent;
   border: none;
@@ -963,7 +970,7 @@ nav {
 .req-meta {
   display: flex;
   justify-content: space-between;
-  font-size: 12px;
+  font-size: 13px;
   color: var(--text-muted);
   margin-bottom: 12px;
   flex-wrap: wrap;
@@ -1246,7 +1253,7 @@ nav {
   display: flex;
   gap: 10px;
   align-items: flex-start;
-  font-size: 12px;
+  font-size: 13px;
   color: var(--text-muted);
   background: var(--surface-2);
   border: 1px solid var(--border);

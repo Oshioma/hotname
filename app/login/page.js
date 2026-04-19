@@ -3,6 +3,7 @@
 import { Suspense, useState } from 'react';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
+import Logo from '@/app/components/Logo';
 
 function LoginForm() {
   const router = useRouter();
@@ -72,7 +73,7 @@ export default function LoginPage() {
   return (
     <>
       <nav>
-        <Link href="/"><span className="logo">hotname<span className="logo-dot" /></span></Link>
+        <Link href="/"><Logo /></Link>
         <div className="nav-actions">
           <Link href="/signup"><button className="btn-ghost">Claim yours</button></Link>
         </div>

@@ -83,7 +83,7 @@ export default function ConnectForm({ ownerUsername, ownerDisplayName, viewerLog
       />
 
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '10px' }}>
-        <span style={{ fontSize: '11px', color: 'var(--text-soft)' }}>
+        <span style={{ fontSize: '12px', color: 'var(--text-soft)' }}>
           {message.length} / {MAX}
           {!viewerLoggedIn && ' · sign in to send'}
         </span>
