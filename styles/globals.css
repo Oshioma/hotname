@@ -422,6 +422,47 @@ nav {
   padding-right: 4px;
 }
 
+/* ─── INLINE SEARCH (dashboard) ─── */
+.inline-search {
+  position: relative;
+  max-width: 520px;
+}
+.inline-search-dropdown {
+  position: absolute;
+  top: calc(100% + 6px);
+  left: 0;
+  right: 0;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow-2);
+  padding: 6px;
+  z-index: 20;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  max-height: 360px;
+  overflow-y: auto;
+}
+.inline-search-more {
+  display: block;
+  text-align: center;
+  padding: 10px;
+  font-size: 12px;
+  color: var(--accent-text);
+  border-top: 1px solid var(--border);
+  margin-top: 4px;
+}
+.inline-search-more:hover { background: var(--surface-2); }
+
+/* Address textarea in channels */
+.ch-simple-textarea {
+  min-height: 70px;
+  resize: vertical;
+  line-height: 1.4;
+  font-family: inherit;
+}
+
 /* ─── DASHBOARD ─── */
 .page {
   max-width: 820px;

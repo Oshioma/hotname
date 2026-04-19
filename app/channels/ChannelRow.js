@@ -134,7 +134,7 @@ export default function ChannelRow({ channel, profileDefaults, onRefresh }) {
     channel.kind === 'phone'   ? '+447911123456' :
     channel.kind === 'email'   ? 'you@example.com' :
     channel.kind === 'url'     ? 'https://…' :
-    channel.kind === 'address' ? '10 Downing Street, London SW1A 2AA' :
+    channel.kind === 'address' ? 'Name\nStreet\nCity, Postcode\nCountry' :
                                  '@username';
 
   return (
@@ -142,16 +142,30 @@ export default function ChannelRow({ channel, profileDefaults, onRefresh }) {
       <div className="ch-simple-label">{channel.label}</div>
 
       <div className="ch-simple-value">
-        <input
-          className="ch-simple-input"
-          value={valueInput}
-          placeholder={placeholder}
-          onChange={(e) => setValueInput(e.target.value)}
-          onBlur={saveValueIfChanged}
-          autoCapitalize="off"
-          autoCorrect="off"
-          spellCheck="false"
-        />
+        {channel.kind === 'address' ? (
+          <textarea
+            className="ch-simple-input ch-simple-textarea"
+            rows={3}
+            value={valueInput}
+            placeholder={placeholder}
+            onChange={(e) => setValueInput(e.target.value)}
+            onBlur={saveValueIfChanged}
+            autoCapitalize="words"
+            autoCorrect="off"
+            spellCheck="false"
+          />
+        ) : (
+          <input
+            className="ch-simple-input"
+            value={valueInput}
+            placeholder={placeholder}
+            onChange={(e) => setValueInput(e.target.value)}
+            onBlur={saveValueIfChanged}
+            autoCapitalize="off"
+            autoCorrect="off"
+            spellCheck="false"
+          />
+        )}
         {isPhone && valueClean && !codeSent && (
           channel.verified && storedEqualsInput ? (
             <span className="ch-simple-check" title="Verified">✓</span>
