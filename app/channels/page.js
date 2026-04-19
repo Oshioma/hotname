@@ -6,6 +6,7 @@ import ChannelRow from './ChannelRow';
 
 export default function ChannelsPage() {
   const [channels, setChannels] = useState([]);
+  const [defaults, setDefaults] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
 
@@ -15,6 +16,7 @@ export default function ChannelsPage() {
       if (!res.ok) { setError('Failed to load channels.'); return; }
       const json = await res.json();
       setChannels(json.channels ?? []);
+      setDefaults(json.profileDefaults ?? null);
       setError('');
     } catch { setError('Network error.'); }
     finally { setLoading(false); }
@@ -34,9 +36,11 @@ export default function ChannelsPage() {
       <div className="page">
         <h2 style={{ marginTop: 0 }}>Channels</h2>
         <p style={{ fontSize: '13px', color: 'var(--text-muted)', marginTop: '-0.4rem', marginBottom: '1.2rem', maxWidth: '560px' }}>
-          Each channel has an access mode. <strong>Open</strong> shows the detail directly.
-          <strong> Request access</strong> lists the channel but hides the detail until you approve.
-          <strong> Invite only</strong> reveals it only to usernames you pick. <strong>Hidden</strong> removes it entirely.
+          Pick how each channel shows up on your Hotname.
+          <strong> Off</strong> hides it ·
+          <strong> Request</strong> requires approval ·
+          <strong> Invite</strong> is for people you pick ·
+          <strong> Public</strong> shows the detail to anyone.
         </p>
 
         {error && <p className="error-msg">{error}</p>}
@@ -44,9 +48,14 @@ export default function ChannelsPage() {
         {loading ? (
           <p className="empty">Loading…</p>
         ) : (
-          <div className="ch-list">
+          <div className="ch-simple-list">
             {channels.map((ch) => (
-              <ChannelRow key={ch.type} channel={ch} onRefresh={fetchChannels} />
+              <ChannelRow
+                key={ch.type}
+                channel={ch}
+                profileDefaults={defaults}
+                onRefresh={fetchChannels}
+              />
             ))}
           </div>
         )}

@@ -4,6 +4,7 @@ import {
   CHANNEL_META,
   CHANNEL_ORDER,
   ACCESS_MODES,
+  normaliseChannelValue,
   validateChannelValue,
 } from '@/lib/channelMeta';
 
@@ -17,10 +18,17 @@ export async function GET() {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return NextResponse.json({ error: 'Unauthorized.' }, { status: 401 });
 
-  const { data: rows } = await supabase
-    .from('channels')
-    .select('id, type, value, verified, access_mode')
-    .eq('user_id', user.id);
+  const [{ data: rows }, { data: profile }] = await Promise.all([
+    supabase
+      .from('channels')
+      .select('id, type, value, verified, access_mode')
+      .eq('user_id', user.id),
+    supabase
+      .from('profiles')
+      .select('phone_number, email')
+      .eq('id', user.id)
+      .maybeSingle(),
+  ]);
 
   const existing = Object.fromEntries((rows ?? []).map((r) => [r.type, r]));
 
@@ -57,7 +65,12 @@ export async function GET() {
     };
   });
 
-  return NextResponse.json({ channels });
+  const profileDefaults = {
+    phone: profile?.phone_number ?? null,
+    email: profile?.email ?? null,
+  };
+
+  return NextResponse.json({ channels, profileDefaults });
 }
 
 /**
@@ -72,7 +85,7 @@ export async function PATCH(request) {
     return NextResponse.json({ error: 'Invalid JSON.' }, { status: 400 });
   }
 
-  const { type, value, access_mode } = body ?? {};
+  const { type, value: rawValue, access_mode } = body ?? {};
 
   if (!CHANNEL_META[type]) {
     return NextResponse.json({ error: 'Invalid channel type.' }, { status: 400 });
@@ -80,6 +93,13 @@ export async function PATCH(request) {
   if (access_mode !== undefined && !ACCESS_MODES.includes(access_mode)) {
     return NextResponse.json({ error: 'Invalid access_mode.' }, { status: 400 });
   }
+
+  // Normalise then validate so users can type 07951… or www.foo.com
+  const value =
+    rawValue !== undefined && rawValue !== null && rawValue !== ''
+      ? normaliseChannelValue(type, rawValue)
+      : rawValue;
+
   if (value !== undefined && value !== null && value !== '') {
     const validationError = validateChannelValue(type, value);
     if (validationError) return NextResponse.json({ error: validationError }, { status: 400 });

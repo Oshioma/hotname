@@ -17,7 +17,7 @@ export default async function DashboardPage() {
 
   const username = profile?.username ?? null;
 
-  const [channelsResult, requestsResult] = await Promise.all([
+  const [channelsResult, inboxResult, pendingResult] = await Promise.all([
     supabase
       .from('channels')
       .select('type, access_mode')
@@ -27,12 +27,17 @@ export default async function DashboardPage() {
       .select('id, requester_username, channel_type, reason, status, created_at')
       .eq('owner_id', user.id)
       .order('created_at', { ascending: false })
-      .limit(5),
+      .limit(10),
+    supabase
+      .from('connection_requests')
+      .select('id', { count: 'exact', head: true })
+      .eq('owner_id', user.id)
+      .eq('status', 'pending'),
   ]);
 
   const channels = channelsResult.data ?? [];
-  const requests = requestsResult.data ?? [];
-  const pendingCount = requests.filter((r) => r.status === 'pending').length;
+  const inbox = inboxResult.data ?? [];
+  const pendingCount = pendingResult.count ?? 0;
   const openCount = channels.filter((c) => c.access_mode !== 'hidden').length;
 
   const initials = (profile?.display_name || profile?.username || user.email)
@@ -51,7 +56,6 @@ export default async function DashboardPage() {
         <Link href="/dashboard"><span className="logo">hotname<span className="logo-dot" /></span></Link>
         <div className="nav-actions">
           <Link href="/channels"><button className="btn-ghost">Channels</button></Link>
-          <Link href="/requests"><button className="btn-ghost">Requests{pendingCount ? ` · ${pendingCount}` : ''}</button></Link>
           <Link href="/settings"><button className="btn-ghost">Settings</button></Link>
           <form action="/api/auth" method="POST" style={{ display: 'inline' }}>
             <input type="hidden" name="action" value="signout" />
@@ -86,7 +90,7 @@ export default async function DashboardPage() {
 
         {/* Quick stats */}
         <div className="quick-grid">
-          <Link href="/requests" className="quick-card">
+          <Link href="/requests?filter=pending" className="quick-card">
             <div className="label">Pending requests</div>
             <div className="val">{pendingCount}<small>waiting</small></div>
           </Link>
@@ -100,18 +104,20 @@ export default async function DashboardPage() {
           </Link>
         </div>
 
-        {/* Recent requests */}
-        <h2>Recent requests</h2>
-        {requests.length === 0 ? (
-          <p className="empty">No requests yet. Share your Hotname to start receiving them.</p>
+        {/* Inbox */}
+        <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', marginTop: '1.8rem', marginBottom: '0.85rem' }}>
+          <h2 style={{ margin: 0 }}>Inbox</h2>
+          <Link href="/requests?filter=pending">
+            <button className="btn-ghost" style={{ fontSize: '12px' }}>
+              See requests{pendingCount ? ` · ${pendingCount}` : ''} →
+            </button>
+          </Link>
+        </div>
+        {inbox.length === 0 ? (
+          <p className="empty">No messages yet. Share your Hotname to start receiving them.</p>
         ) : (
           <div className="req-list">
-            {requests.slice(0, 3).map((r) => <RequestCard key={r.id} request={r} />)}
-            {requests.length > 3 && (
-              <Link href="/requests" style={{ textAlign: 'center', padding: '8px', color: 'var(--accent-text)', fontSize: '13px' }}>
-                See all requests →
-              </Link>
-            )}
+            {inbox.map((m) => <RequestCard key={m.id} request={m} />)}
           </div>
         )}
       </div>

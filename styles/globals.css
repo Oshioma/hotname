@@ -712,7 +712,134 @@ nav {
 .redirect-panel p { font-size: 12px; color: var(--text-muted); margin-bottom: 8px; }
 .redirect-options { display: flex; flex-wrap: wrap; gap: 6px; }
 
-/* ─── CHANNELS CONTROL ─── */
+/* ─── CHANNELS CONTROL (compact) ─── */
+.ch-simple-list { display: flex; flex-direction: column; gap: 8px; }
+
+.ch-simple {
+  display: grid;
+  grid-template-columns: 110px 1fr auto;
+  align-items: center;
+  gap: 12px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 10px 14px;
+  transition: background .15s, border-color .15s;
+}
+.ch-simple.ch-simple-on {
+  background: #e8f2e9;            /* pastel green — live */
+  border-color: #c9e0cc;
+}
+
+.ch-simple-label {
+  font-size: 14px;
+  font-weight: 600;
+  letter-spacing: -0.005em;
+  color: var(--text);
+}
+
+.ch-simple-value {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+}
+.ch-simple-input {
+  flex: 1;
+  min-width: 0;
+  background: #fff;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 7px 10px;
+  font-size: 13px;
+  color: var(--text);
+  outline: none;
+  font-family: inherit;
+  transition: border-color .15s;
+}
+.ch-simple-input:focus { border-color: var(--accent); }
+.ch-simple.ch-simple-on .ch-simple-input { background: #fff; }
+
+.ch-simple-verify {
+  font-size: 12px;
+  padding: 5px 10px;
+  border-radius: 999px;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  color: var(--accent-text);
+}
+.ch-simple-verify:hover { background: #fff; border-color: var(--accent); }
+
+.ch-simple-check {
+  font-size: 14px;
+  color: var(--ok);
+  padding: 0 6px;
+  font-weight: 700;
+}
+
+.ch-simple-pills {
+  display: inline-flex;
+  gap: 2px;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  padding: 3px;
+}
+.pill {
+  font-family: inherit;
+  border: none;
+  background: transparent;
+  color: var(--text-muted);
+  font-size: 12px;
+  padding: 5px 12px;
+  border-radius: 999px;
+  cursor: pointer;
+  transition: background .12s, color .12s;
+  white-space: nowrap;
+}
+.pill:hover { color: var(--text); }
+.pill.pill-on {
+  background: var(--text);
+  color: #fff;
+  font-weight: 500;
+}
+.pill.pill-on.pill-off {
+  background: var(--text-muted);
+  color: #fff;
+}
+
+.ch-simple-error {
+  grid-column: 1 / -1;
+  font-size: 12px;
+  color: var(--deny);
+  background: var(--deny-soft);
+  padding: 6px 10px;
+  border-radius: 8px;
+  margin-top: 4px;
+}
+
+.ch-simple-sub {
+  grid-column: 1 / -1;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+  padding-top: 8px;
+  border-top: 1px dashed rgba(0,0,0,0.08);
+  margin-top: 4px;
+}
+.ch-simple-allowlist { padding-top: 8px; }
+
+@media (max-width: 640px) {
+  .ch-simple {
+    grid-template-columns: 1fr;
+    gap: 8px;
+  }
+  .ch-simple-pills { width: 100%; justify-content: space-between; }
+  .pill { flex: 1; text-align: center; padding: 6px 4px; }
+}
+
+/* legacy (kept for anything referencing the old classes) */
 .ch-list { display: flex; flex-direction: column; gap: 10px; }
 .ch-row {
   background: var(--surface);
