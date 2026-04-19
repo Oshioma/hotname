@@ -9,11 +9,27 @@ const PHONE_RE = /^\+[1-9]\d{6,14}$/;
  * Body: { action: 'login' | 'signup' | 'signout', ... }
  */
 export async function POST(request) {
-  let body;
+  let body = {};
+  const contentType = request.headers.get('content-type') ?? '';
+
   try {
-    body = await request.json();
+    if (contentType.includes('application/json')) {
+      body = await request.json();
+    } else if (contentType.includes('form')) {
+      const form = await request.formData();
+      body = Object.fromEntries(form.entries());
+    } else {
+      // Best-effort — treat empty or unknown content types as no body.
+      const text = await request.text();
+      if (text) {
+        try { body = JSON.parse(text); }
+        catch {
+          return NextResponse.json({ error: 'Invalid body.' }, { status: 400 });
+        }
+      }
+    }
   } catch {
-    return NextResponse.json({ error: 'Invalid JSON.' }, { status: 400 });
+    return NextResponse.json({ error: 'Invalid body.' }, { status: 400 });
   }
 
   const { action, email, password, username, display_name, phone_number } = body ?? {};
