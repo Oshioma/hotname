@@ -109,14 +109,18 @@ export default async function ProfilePage({ params }) {
   );
 
   // The composer only offers channels Hotname can actually route a message
-  // through (WhatsApp / SMS / Email), plus any channel in Request mode — a
-  // Request is a message to the owner asking for that channel's value.
-  // Everything else (Instagram, Website, Telegram, etc. when Public) just
-  // lives as a clickable chip above.
+  // through (WhatsApp / SMS / Email / Post), plus any channel in Request
+  // mode — a Request is a message to the owner asking for that channel's
+  // value. Everything else (Instagram, Website, Telegram, etc. when Public)
+  // just lives as a clickable chip above.
   const composerChannels = channels.filter((c) => {
     if (c.mode === 'approval') return true;
     return CHANNEL_META[c.type]?.deliverable;
   });
+
+  // 'In app' is virtual: always available, goes to the owner's Hotname
+  // inbox. Prepend it so it's the default choice.
+  composerChannels.unshift({ type: 'inapp', mode: 'direct' });
 
   const initials = (profile.display_name || profile.username)
     .split(' ').map((w) => w[0]).join('').toUpperCase().slice(0, 2);
@@ -157,50 +161,71 @@ export default async function ProfilePage({ params }) {
         )}
       </section>
 
-      {channels.length > 0 && (
-        <div className="available-on">
-          <span className="available-on-label">Available on</span>
-          <div className="available-on-chips">
-            {channels.map((ch) => {
-              const meta = CHANNEL_META[ch.type];
-              if (!meta) return null;
-              const modeLabel =
-                ch.mode === 'direct'   ? ACCESS_LABEL.open :
-                ch.mode === 'allowed'  ? ACCESS_LABEL.selected :
-                ch.mode === 'approval' ? ACCESS_LABEL.request :
-                '';
-              const canLinkOut =
-                (ch.mode === 'direct' || ch.mode === 'allowed') &&
-                ch.value &&
-                typeof meta.valueToLink === 'function';
+      {channels.length > 0 && (() => {
+        const modeLabel = (mode) =>
+          mode === 'direct'   ? ACCESS_LABEL.open :
+          mode === 'allowed'  ? ACCESS_LABEL.selected :
+          mode === 'approval' ? ACCESS_LABEL.request :
+          '';
 
-              if (canLinkOut) {
-                const href = meta.valueToLink(ch.value);
-                const opensExternal = meta.kind === 'url' || meta.kind === 'handle';
-                return (
-                  <a
-                    key={ch.type}
-                    href={href}
-                    target={opensExternal ? '_blank' : undefined}
-                    rel={opensExternal ? 'noopener noreferrer' : undefined}
-                    className={`avail-chip avail-${ch.mode} avail-clickable`}
-                  >
-                    {meta.label}
-                    <span className="avail-chip-mode">· {modeLabel}</span>
-                  </a>
-                );
-              }
+        const linkChannels = [];
+        const messageChannels = [];
+        for (const ch of channels) {
+          const meta = CHANNEL_META[ch.type];
+          if (!meta) continue;
+          const canLinkOut =
+            (ch.mode === 'direct' || ch.mode === 'allowed') &&
+            ch.value &&
+            typeof meta.valueToLink === 'function';
+          (canLinkOut ? linkChannels : messageChannels).push(ch);
+        }
 
-              return (
-                <span key={ch.type} className={`avail-chip avail-${ch.mode}`}>
-                  {meta.label}
-                  {modeLabel && <span className="avail-chip-mode">· {modeLabel}</span>}
-                </span>
-              );
-            })}
+        return (
+          <div className="available-sections">
+            {linkChannels.length > 0 && (
+              <div className="available-on">
+                <span className="available-on-label">Links</span>
+                <div className="available-on-chips">
+                  {linkChannels.map((ch) => {
+                    const meta = CHANNEL_META[ch.type];
+                    const href = meta.valueToLink(ch.value);
+                    const opensExternal = meta.kind === 'url' || meta.kind === 'handle';
+                    return (
+                      <a
+                        key={ch.type}
+                        href={href}
+                        target={opensExternal ? '_blank' : undefined}
+                        rel={opensExternal ? 'noopener noreferrer' : undefined}
+                        className={`avail-chip avail-${ch.mode} avail-clickable`}
+                      >
+                        {meta.label}
+                        <span className="avail-chip-mode">· {modeLabel(ch.mode)}</span>
+                      </a>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+
+            {messageChannels.length > 0 && (
+              <div className="available-on">
+                <span className="available-on-label">Message</span>
+                <div className="available-on-chips">
+                  {messageChannels.map((ch) => {
+                    const meta = CHANNEL_META[ch.type];
+                    return (
+                      <span key={ch.type} className={`avail-chip avail-${ch.mode}`}>
+                        {meta.label}
+                        <span className="avail-chip-mode">· {modeLabel(ch.mode)}</span>
+                      </span>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
           </div>
-        </div>
-      )}
+        );
+      })()}
 
       <div className="request-box">
         {isSelf && (

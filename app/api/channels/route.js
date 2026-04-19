@@ -48,24 +48,27 @@ export async function GET() {
     accessByChannel[a.channel_id].push(a.allowed_username);
   }
 
-  const channels = CHANNEL_ORDER.map((type) => {
-    const row = existing[type] ?? {
-      id: null,
-      type,
-      value: null,
-      verified: false,
-      access_mode: 'hidden',
-    };
-    return {
-      ...row,
-      access_list: row.id ? (accessByChannel[row.id] ?? []) : [],
-      kind: CHANNEL_META[type].kind,
-      label: CHANNEL_META[type].label,
-      hint: CHANNEL_META[type].hint,
-      deliverable: !!CHANNEL_META[type].deliverable,
-      private_value: !!CHANNEL_META[type].privateValue,
-    };
-  });
+  const channels = CHANNEL_ORDER
+    // Virtual channels (e.g. In app) aren't configurable — hide them here.
+    .filter((type) => !CHANNEL_META[type]?.virtual)
+    .map((type) => {
+      const row = existing[type] ?? {
+        id: null,
+        type,
+        value: null,
+        verified: false,
+        access_mode: 'hidden',
+      };
+      return {
+        ...row,
+        access_list: row.id ? (accessByChannel[row.id] ?? []) : [],
+        kind: CHANNEL_META[type].kind,
+        label: CHANNEL_META[type].label,
+        hint: CHANNEL_META[type].hint,
+        deliverable: !!CHANNEL_META[type].deliverable,
+        private_value: !!CHANNEL_META[type].privateValue,
+      };
+    });
 
   const profileDefaults = {
     phone: profile?.phone_number ?? null,

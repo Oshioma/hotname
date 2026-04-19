@@ -77,6 +77,30 @@ nav {
 }
 .nav-actions { display: flex; gap: 8px; align-items: center; }
 
+/* Nav variant with a search bar in the middle */
+.nav-with-search { gap: 16px; }
+.nav-search {
+  flex: 1;
+  min-width: 0;
+  max-width: 420px;
+}
+.nav-with-search .search-input {
+  padding: 3px 6px 3px 12px;
+  background: var(--surface);
+}
+.nav-with-search .search-input input {
+  padding: 7px 2px;
+  font-size: 14px;
+}
+.nav-with-search .search-input button {
+  padding: 6px 12px;
+  font-size: 12px;
+}
+@media (max-width: 700px) {
+  .nav-with-search { flex-wrap: wrap; }
+  .nav-search { flex-basis: 100%; order: 3; max-width: none; }
+}
+
 /* ─── BUTTONS ─── */
 .btn-primary {
   background: var(--text);
@@ -673,11 +697,16 @@ nav {
 .access-badge.pending  { background: var(--warn-soft);   color: var(--warn); }
 .access-badge.denied   { background: var(--deny-soft);   color: var(--deny); }
 
-/* ─── AVAILABLE-ON CHIP ROW ─── */
-.available-on {
+/* ─── AVAILABLE-ON CHIP SECTIONS ─── */
+.available-sections {
   max-width: 520px;
   margin: 0.5rem auto 1.2rem;
   padding: 0 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+.available-on {
   display: flex;
   flex-direction: column;
   align-items: center;

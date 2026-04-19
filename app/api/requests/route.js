@@ -77,33 +77,42 @@ export async function POST(request) {
     }
   }
 
-  const { data: channel } = await service
-    .from('channels')
-    .select('id, access_mode, value')
-    .eq('user_id', owner.id)
-    .eq('type', channel_type)
-    .maybeSingle();
-  if (!channel || channel.access_mode === 'hidden') {
-    return NextResponse.json({ error: 'That channel is not available.' }, { status: 400 });
-  }
-
-  // Decide the initial status.
+  // 'In app' is a virtual channel — always available, no row in `channels`,
+  // delivered straight to the owner's Hotname inbox.
+  const isVirtual = CHANNEL_META[channel_type]?.virtual;
+  let channel = null;
   let status = null;
-  if (channel.access_mode === 'open') {
+
+  if (isVirtual) {
     status = 'approved';
-  } else if (channel.access_mode === 'request') {
-    status = 'pending';
-  } else if (channel.access_mode === 'selected') {
-    const { data: allow } = await service
-      .from('channel_access')
-      .select('id')
-      .eq('channel_id', channel.id)
-      .eq('allowed_username', requesterProfile.username)
+  } else {
+    const { data: ch } = await service
+      .from('channels')
+      .select('id, access_mode, value')
+      .eq('user_id', owner.id)
+      .eq('type', channel_type)
       .maybeSingle();
-    if (!allow) {
-      return NextResponse.json({ error: 'This channel is invite-only.' }, { status: 403 });
+    if (!ch || ch.access_mode === 'hidden') {
+      return NextResponse.json({ error: 'That channel is not available.' }, { status: 400 });
     }
-    status = 'approved';
+    channel = ch;
+
+    if (ch.access_mode === 'open') {
+      status = 'approved';
+    } else if (ch.access_mode === 'request') {
+      status = 'pending';
+    } else if (ch.access_mode === 'selected') {
+      const { data: allow } = await service
+        .from('channel_access')
+        .select('id')
+        .eq('channel_id', ch.id)
+        .eq('allowed_username', requesterProfile.username)
+        .maybeSingle();
+      if (!allow) {
+        return NextResponse.json({ error: 'This channel is invite-only.' }, { status: 403 });
+      }
+      status = 'approved';
+    }
   }
 
   // Block duplicate pending requests for the same pair+channel
@@ -137,10 +146,9 @@ export async function POST(request) {
   if (insertError) return NextResponse.json({ error: insertError.message }, { status: 500 });
 
   // Try to deliver via Twilio when we auto-approved and the owner has a phone.
-  // Skip external delivery on self-messages — the inbox row is enough; no point
-  // texting yourself.
+  // Skip for virtual channels (In app) and self-messages.
   let delivered = false;
-  if (status === 'approved' && channel.value && !isSelf) {
+  if (status === 'approved' && !isVirtual && !isSelf && channel?.value) {
     try {
       delivered = await deliverMessage(channel_type, channel.value, requesterProfile.username, message);
     } catch (err) {

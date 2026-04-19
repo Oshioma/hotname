@@ -62,10 +62,12 @@ export default async function DashboardPage() {
 
   return (
     <>
-      <nav>
+      <nav className="nav-with-search">
         <Link href="/dashboard"><span className="logo">hotname<span className="logo-dot" /></span></Link>
+        <div className="nav-search">
+          <InlineSearch placeholder="Find a Hotname — @handle or name" />
+        </div>
         <div className="nav-actions">
-          <Link href="/find"><button className="btn-ghost">Advanced find</button></Link>
           <Link href="/channels"><button className="btn-ghost">Channels</button></Link>
           <Link href="/settings"><button className="btn-ghost">Settings</button></Link>
           <form action="/api/auth" method="POST" style={{ display: 'inline' }}>
@@ -76,11 +78,6 @@ export default async function DashboardPage() {
       </nav>
 
       <div className="page">
-        {/* Search */}
-        <div style={{ marginBottom: '1.5rem' }}>
-          <InlineSearch placeholder="Find a Hotname — @handle or name" />
-        </div>
-
         {/* Identity */}
         <div className="identity-card">
           <div className="identity-avatar">{initials}</div>
