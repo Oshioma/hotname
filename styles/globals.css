@@ -640,7 +640,7 @@ nav {
 }
 .identity-handle {
   font-size: 14px;
-  color: var(--accent-text);
+  color: #3d7a72;
   font-family: ui-monospace, monospace;
   margin-bottom: 6px;
 }
@@ -673,7 +673,7 @@ nav {
 }
 .identity-view {
   font-size: 13px;
-  color: var(--accent-text);
+  color: #3d7a72;
   font-weight: 500;
   text-decoration: none;
 }
