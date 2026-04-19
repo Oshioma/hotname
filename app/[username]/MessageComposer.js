@@ -113,7 +113,7 @@ export default function MessageComposer({ ownerUsername, channels, recentStatuse
 
       <div className="ch-detail-label" style={{ marginTop: '12px' }}>Message</div>
       <textarea
-        rows={4}
+        rows={3}
         placeholder={`Hi @${ownerUsername}…`}
         value={body}
         onChange={(e) => setBody(e.target.value.slice(0, MAX))}
