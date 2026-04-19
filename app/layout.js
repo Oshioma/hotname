@@ -1,8 +1,8 @@
 import '../styles/globals.css';
 
 export const metadata = {
-  title: 'Hotname',
-  description: 'Send anonymous messages to anyone.',
+  title: 'Hotname — one name. The right way to reach you.',
+  description: 'Share one name. Let people reach you through the channels you choose — without exposing everything.',
 };
 
 export default function RootLayout({ children }) {

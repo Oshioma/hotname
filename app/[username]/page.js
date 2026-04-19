@@ -2,38 +2,32 @@ import { notFound } from 'next/navigation';
 import Link from 'next/link';
 import { createClient } from '@/lib/supabase/server';
 import { createServiceClient } from '@/lib/supabase/service';
-import BioMessageForm from './BioMessageForm';
+import { CHANNEL_META, CHANNEL_ORDER, ACCESS_LABEL } from '@/lib/channelMeta';
+import RequestForm from './RequestForm';
 
 export async function generateMetadata({ params }) {
   const { username } = await params;
   return {
     title: `@${username} — Hotname`,
-    description: `Contact ${username} via Hotname.`,
+    description: `Reach @${username} through the channels they choose.`,
   };
 }
 
-const CH_META = {
-  whatsapp: { label: 'WhatsApp', icon: '💬', color: '#25d366' },
-  sms:      { label: 'SMS',      icon: '📱', color: '#007aff' },
-  email:    { label: 'Email',    icon: '✉️',  color: '#ff5c3a' },
-  post:     { label: 'Post',     icon: '📮', color: '#f59e0b' },
-};
-
-export default async function BioPage({ params }) {
+export default async function ProfilePage({ params }) {
   const { username } = await params;
+  const handle = username.toLowerCase();
+
   const supabase = await createClient();
   const service  = createServiceClient();
 
-  // Owner profile
   const { data: profile } = await service
     .from('profiles')
-    .select('id, username, display_name, bio')
-    .eq('username', username.toLowerCase())
+    .select('id, username, display_name, bio, location, verified')
+    .eq('username', handle)
     .maybeSingle();
 
   if (!profile) notFound();
 
-  // Current viewer (may be null if unauthenticated)
   const { data: { user: viewer } } = await supabase.auth.getUser();
   let viewerUsername = null;
   if (viewer) {
@@ -45,75 +39,164 @@ export default async function BioPage({ params }) {
     viewerUsername = vp?.username ?? null;
   }
 
-  // Fetch enabled channels for the profile owner
+  // Channels: fetch all non-hidden, decide access per-viewer
   const { data: channelRows } = await service
     .from('channels')
-    .select('id, type, enabled, default_access, value')
+    .select('id, type, value, access_mode')
     .eq('user_id', profile.id)
-    .eq('enabled', true);
+    .neq('access_mode', 'hidden');
 
-  // Determine which channels the viewer can see
-  const visibleChannels = [];
+  // Existing request (if viewer is logged in) — to show current status per channel
+  let requestsByType = {};
+  if (viewer) {
+    const { data: reqs } = await service
+      .from('connection_requests')
+      .select('channel_type, status, redirected_to, created_at')
+      .eq('owner_id', profile.id)
+      .eq('requester_id', viewer.id)
+      .order('created_at', { ascending: false });
+    for (const r of reqs ?? []) {
+      if (!requestsByType[r.channel_type]) requestsByType[r.channel_type] = r;
+    }
+  }
+
+  const channels = [];
   for (const ch of channelRows ?? []) {
-    if (ch.default_access === 'everyone') {
-      visibleChannels.push({ type: ch.type, postalAddress: ch.type === 'post' ? null : undefined });
-    } else if (viewerUsername) {
-      // Check channel_access
+    let visible = ch.access_mode === 'open' || ch.access_mode === 'request';
+    let revealValue = ch.access_mode === 'open';
+
+    if (ch.access_mode === 'selected' && viewerUsername) {
       const { data: access } = await service
         .from('channel_access')
-        .select('allowed_username')
+        .select('id')
         .eq('channel_id', ch.id)
         .eq('allowed_username', viewerUsername)
         .maybeSingle();
-      if (access) {
-        visibleChannels.push({ type: ch.type });
-      }
+      if (access) { visible = true; revealValue = true; }
     }
+
+    // Approved request unlocks the raw value as if it were `open`.
+    const req = requestsByType[ch.type];
+    if (req?.status === 'approved') revealValue = true;
+
+    if (visible) channels.push({ ...ch, revealValue, request: req ?? null });
   }
+
+  // Keep canonical channel order
+  channels.sort(
+    (a, b) => CHANNEL_ORDER.indexOf(a.type) - CHANNEL_ORDER.indexOf(b.type)
+  );
+
+  const requestableChannels = channels.filter(
+    (c) => c.access_mode === 'request' && !c.revealValue
+  );
 
   const initials = (profile.display_name || profile.username)
     .split(' ').map((w) => w[0]).join('').toUpperCase().slice(0, 2);
 
   return (
-    <div className="bio-page">
-      <nav className="bio-nav">
-        <Link href="/"><span className="logo">hot<span>name</span></span></Link>
-        <Link href="/signup"><button className="btn-ghost" style={{ fontSize: '12px' }}>Get your Hotname →</button></Link>
+    <div className="profile-page">
+      <nav>
+        <Link href="/"><span className="logo">hotname<span className="logo-dot" /></span></Link>
+        <div className="nav-actions">
+          {viewer ? (
+            <Link href="/dashboard"><button className="btn-ghost">Dashboard</button></Link>
+          ) : (
+            <>
+              <Link href="/login"><button className="btn-ghost">Log in</button></Link>
+              <Link href="/signup"><button className="btn-primary">Claim yours</button></Link>
+            </>
+          )}
+        </div>
       </nav>
 
-      <div className="bio-hero">
-        <div className="bio-avatar">{initials}</div>
-        <h1 className="bio-name">{profile.display_name || `@${profile.username}`}</h1>
-        <p className="bio-handle">@{profile.username}</p>
-        {profile.bio && <p className="bio-text">{profile.bio}</p>}
-      </div>
+      <section className="profile-hero">
+        <div className="profile-avatar">{initials}</div>
+        <h1 className="profile-name">{profile.display_name || profile.username}</h1>
+        <p className="profile-handle">@{profile.username}</p>
+        {profile.bio && <p className="profile-status">{profile.bio}</p>}
+        {(profile.verified || profile.location) && (
+          <div className="trust-chips">
+            {profile.verified && <span className="trust-chip">✓ Verified</span>}
+            {profile.location && <span className="trust-chip" style={{ background: 'var(--surface)', color: 'var(--text-muted)', border: '1px solid var(--border)' }}>{profile.location}</span>}
+          </div>
+        )}
+      </section>
 
-      {/* Channel buttons */}
-      {visibleChannels.length > 0 && (
-        <div className="bio-channels">
-          {visibleChannels.map((ch) => {
-            const meta = CH_META[ch.type];
+      {channels.length === 0 ? (
+        <div className="empty" style={{ marginTop: '1rem' }}>
+          @{profile.username} hasn&apos;t opened any channels yet.
+        </div>
+      ) : (
+        <div className="channel-list">
+          {channels.map((ch) => {
+            const meta = CHANNEL_META[ch.type];
+            if (!meta) return null;
+            const badgeClass = ch.revealValue ? 'open' : ch.access_mode;
+            const badgeLabel = ch.revealValue ? 'Open' : ACCESS_LABEL[ch.access_mode];
+
+            if (ch.revealValue && ch.value) {
+              return (
+                <a
+                  key={ch.type}
+                  className="channel-row clickable"
+                  href={meta.valueToLink(ch.value)}
+                  target={meta.kind === 'url' || meta.kind === 'handle' ? '_blank' : undefined}
+                  rel="noopener noreferrer"
+                >
+                  <div>
+                    <div className="channel-row-label">{meta.label}</div>
+                    <div className="channel-row-hint">{ch.value}</div>
+                  </div>
+                  <span className={`access-badge ${badgeClass}`}>{badgeLabel}</span>
+                </a>
+              );
+            }
+
             return (
-              <Link
-                key={ch.type}
-                href={`/compose?to=${profile.username}&channel=${ch.type}`}
-                className="bio-ch-btn"
-                style={{ '--ch-color': meta.color }}
-              >
-                <span>{meta.icon}</span> {meta.label}
-              </Link>
+              <div key={ch.type} className="channel-row">
+                <div>
+                  <div className="channel-row-label">{meta.label}</div>
+                  <div className="channel-row-hint">
+                    {ch.request?.status === 'pending'  && 'Request pending'}
+                    {ch.request?.status === 'denied'   && 'Request declined'}
+                    {ch.request?.status === 'redirected' && `Redirected → ${CHANNEL_META[ch.request.redirected_to]?.label ?? ch.request.redirected_to}`}
+                    {!ch.request && meta.hint}
+                  </div>
+                </div>
+                <span className={`access-badge ${ch.request ? ch.request.status : badgeClass}`}>
+                  {ch.request?.status === 'pending'  ? 'Pending'
+                    : ch.request?.status === 'denied' ? 'Declined'
+                    : ch.request?.status === 'redirected' ? 'Redirected'
+                    : badgeLabel}
+                </span>
+              </div>
             );
           })}
         </div>
       )}
 
-      {/* Anonymous message form */}
-      <div className="bio-form-wrap">
-        <BioMessageForm username={profile.username} />
+      {/* Request connection */}
+      <div className="request-box">
+        {!viewer ? (
+          <div className="auth-nudge">
+            To request a connection, <Link href={`/signup?next=/${profile.username}`}>create an account</Link> or{' '}
+            <Link href={`/login?next=/${profile.username}`}>sign in</Link>. Hotname owners only respond to verified accounts.
+          </div>
+        ) : viewer.id === profile.id ? (
+          <div className="auth-nudge">
+            This is your own profile. <Link href="/channels">Edit your channels →</Link>
+          </div>
+        ) : requestableChannels.length === 0 ? null : (
+          <RequestForm
+            ownerUsername={profile.username}
+            requestableChannels={requestableChannels.map((c) => c.type)}
+          />
+        )}
       </div>
 
-      <div className="bio-footer">
-        <Link href="/">Powered by <strong>hotname</strong></Link>
+      <div className="profile-footer">
+        <Link href="/">Powered by hotname · Your Hotname is all they need.</Link>
       </div>
     </div>
   );

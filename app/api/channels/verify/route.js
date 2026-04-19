@@ -3,13 +3,14 @@ import { createClient } from '@/lib/supabase/server';
 import { sendVerificationCode, checkVerificationCode } from '@/lib/twilio';
 
 const PHONE_RE = /^\+[1-9]\d{6,14}$/;
+const PHONE_TYPES = ['whatsapp', 'sms', 'phone', 'signal'];
 
 /**
  * POST /api/channels/verify
- * Body: { action: 'send' | 'check', type: 'whatsapp'|'sms', phone, code? }
+ * Body: { action: 'send' | 'check', type: <phone-channel>, phone, code? }
  *
- * 'send'  → sends a Twilio Verify OTP to the given phone number
- * 'check' → verifies the OTP; on success marks channel as verified+enabled
+ * Twilio Verify OTP flow. On success marks the channel as verified.
+ * Does not toggle visibility — the owner still picks an access_mode.
  */
 export async function POST(request) {
   let body;
@@ -19,8 +20,8 @@ export async function POST(request) {
 
   const { action, type, phone, code } = body ?? {};
 
-  if (!['whatsapp', 'sms'].includes(type)) {
-    return NextResponse.json({ error: 'type must be whatsapp or sms.' }, { status: 400 });
+  if (!PHONE_TYPES.includes(type)) {
+    return NextResponse.json({ error: 'type is not a phone-backed channel.' }, { status: 400 });
   }
   if (!phone || !PHONE_RE.test(phone)) {
     return NextResponse.json({ error: 'Phone must be E.164 format (e.g. +447911123456).' }, { status: 400 });
@@ -37,9 +38,8 @@ export async function POST(request) {
       console.error('Verify send error:', err);
       return NextResponse.json({ error: 'Failed to send verification code. Check Twilio configuration.' }, { status: 502 });
     }
-    // Save the phone number (unverified) so it's ready when they confirm
     await supabase.from('channels').upsert(
-      { user_id: user.id, type, value: phone, verified: false, enabled: false },
+      { user_id: user.id, type, value: phone, verified: false },
       { onConflict: 'user_id,type' }
     );
     return NextResponse.json({ ok: true });
@@ -57,9 +57,8 @@ export async function POST(request) {
     if (!approved) {
       return NextResponse.json({ error: 'Incorrect code. Please try again.' }, { status: 422 });
     }
-    // Mark channel as verified and enabled
     await supabase.from('channels').upsert(
-      { user_id: user.id, type, value: phone, verified: true, enabled: true },
+      { user_id: user.id, type, value: phone, verified: true },
       { onConflict: 'user_id,type' }
     );
     return NextResponse.json({ ok: true });

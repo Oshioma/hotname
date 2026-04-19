@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
-import ChannelCard from './ChannelCard';
+import ChannelRow from './ChannelRow';
 
 export default function ChannelsPage() {
   const [channels, setChannels] = useState([]);
@@ -15,6 +15,7 @@ export default function ChannelsPage() {
       if (!res.ok) { setError('Failed to load channels.'); return; }
       const json = await res.json();
       setChannels(json.channels ?? []);
+      setError('');
     } catch { setError('Network error.'); }
     finally { setLoading(false); }
   }, []);
@@ -24,14 +25,18 @@ export default function ChannelsPage() {
   return (
     <>
       <nav>
-        <Link href="/dashboard"><span className="logo">hot<span>name</span></span></Link>
-        <Link href="/dashboard"><button className="btn-ghost">← Dashboard</button></Link>
+        <Link href="/dashboard"><span className="logo">hotname<span className="logo-dot" /></span></Link>
+        <div className="nav-actions">
+          <Link href="/dashboard"><button className="btn-ghost">← Dashboard</button></Link>
+        </div>
       </nav>
 
-      <div className="dash">
-        <h2>Channels</h2>
-        <p style={{ fontSize: '13px', color: '#666', marginBottom: '1.5rem', maxWidth: '520px' }}>
-          Control how people can contact you. Set each channel to <strong>Everyone</strong> (visible on your public profile) or <strong>Selected people</strong> (only people you add can see it).
+      <div className="page">
+        <h2 style={{ marginTop: 0 }}>Channels</h2>
+        <p style={{ fontSize: '13px', color: 'var(--text-muted)', marginTop: '-0.4rem', marginBottom: '1.2rem', maxWidth: '560px' }}>
+          Each channel has an access mode. <strong>Open</strong> shows the detail directly.
+          <strong> Request access</strong> lists the channel but hides the detail until you approve.
+          <strong> Invite only</strong> reveals it only to usernames you pick. <strong>Hidden</strong> removes it entirely.
         </p>
 
         {error && <p className="error-msg">{error}</p>}
@@ -39,9 +44,9 @@ export default function ChannelsPage() {
         {loading ? (
           <p className="empty">Loading…</p>
         ) : (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+          <div className="ch-list">
             {channels.map((ch) => (
-              <ChannelCard key={ch.type} channel={ch} onRefresh={fetchChannels} />
+              <ChannelRow key={ch.type} channel={ch} onRefresh={fetchChannels} />
             ))}
           </div>
         )}

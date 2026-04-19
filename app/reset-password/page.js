@@ -51,7 +51,7 @@ export default function ResetPasswordPage() {
   return (
     <>
       <nav>
-        <Link href="/"><span className="logo">hot<span>name</span></span></Link>
+        <Link href="/"><span className="logo">hotname<span className="logo-dot" /></span></Link>
       </nav>
       <div className="form-wrap">
         <div className="card">

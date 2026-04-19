@@ -14,7 +14,7 @@ export async function PATCH(request) {
     return NextResponse.json({ error: 'Invalid JSON.' }, { status: 400 });
   }
 
-  const { display_name, phone_number, bio } = body ?? {};
+  const { display_name, phone_number, bio, location } = body ?? {};
 
   if (display_name !== undefined && (typeof display_name !== 'string' || !display_name.trim())) {
     return NextResponse.json({ error: 'display_name cannot be blank.' }, { status: 400 });
@@ -31,6 +31,10 @@ export async function PATCH(request) {
     return NextResponse.json({ error: 'Bio must be 300 characters or fewer.' }, { status: 400 });
   }
 
+  if (location !== undefined && typeof location === 'string' && location.length > 80) {
+    return NextResponse.json({ error: 'Location must be 80 characters or fewer.' }, { status: 400 });
+  }
+
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return NextResponse.json({ error: 'Unauthorized.' }, { status: 401 });
@@ -39,6 +43,7 @@ export async function PATCH(request) {
   if (display_name !== undefined) updates.display_name = display_name.trim();
   if (phone_number !== undefined) updates.phone_number = phone_number || null;
   if (bio !== undefined) updates.bio = bio.trim() || null;
+  if (location !== undefined) updates.location = location.trim() || null;
 
   if (Object.keys(updates).length === 0) {
     return NextResponse.json({ error: 'Nothing to update.' }, { status: 400 });

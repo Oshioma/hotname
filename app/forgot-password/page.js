@@ -39,7 +39,7 @@ export default function ForgotPasswordPage() {
   return (
     <>
       <nav>
-        <Link href="/"><span className="logo">hot<span>name</span></span></Link>
+        <Link href="/"><span className="logo">hotname<span className="logo-dot" /></span></Link>
       </nav>
       <div className="form-wrap">
         <div className="card">
@@ -51,7 +51,7 @@ export default function ForgotPasswordPage() {
                 Check your spam folder if it doesn&apos;t arrive within a minute.
               </p>
               <p style={{ marginTop: '1.5rem', fontSize: '13px' }}>
-                <Link href="/login" style={{ color: '#ff5c3a' }}>Back to sign in</Link>
+                <Link href="/login" style={{ color: 'var(--accent-text)' }}>Back to sign in</Link>
               </p>
             </>
           ) : (
