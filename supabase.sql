@@ -1,16 +1,24 @@
 -- Hotname database schema
 -- Run this in the Supabase SQL editor to set up the required tables.
-
+--
+-- Hotname is a permission-based contact-identity layer.
+--   • One person shares only a Hotname (e.g. @oshi)
+--   • The owner controls which channels are visible and how others can reach them
+--   • Instead of exposing raw details, the profile exposes ACCESS LEVELS
+--   • Visitors submit requests; owners approve / deny / redirect them
+--
 -- ─────────────────────────────────────────────
 -- PROFILES
 -- ─────────────────────────────────────────────
 create table if not exists profiles (
   id           uuid primary key references auth.users(id) on delete cascade,
-  username     text unique not null,
+  username     text unique not null,                 -- the Hotname (lowercase)
   display_name text,
-  bio          text,
+  bio          text,                                 -- short status line under the name
+  location     text,                                 -- optional free-form location
   email        text,
   phone_number text,
+  verified     boolean not null default false,       -- email/phone verified trust marker
   created_at   timestamptz default now()
 );
 
@@ -26,109 +34,47 @@ create policy "Users can update their own profile"
   on profiles for update using (auth.uid() = id);
 
 -- ─────────────────────────────────────────────
--- MESSAGES
--- thread_id groups a conversation.
--- parent_id points to the message being replied to.
--- When sender_id is NULL the message was sent anonymously (public bio page).
--- Replies are only possible when both sides have accounts (sender_id NOT NULL).
--- ─────────────────────────────────────────────
-create table if not exists messages (
-  id                  uuid primary key default gen_random_uuid(),
-  thread_id           uuid not null default gen_random_uuid(),
-  parent_id           uuid references messages(id) on delete set null,
-  sender_id           uuid references auth.users(id) on delete set null,
-  recipient_username  text not null references profiles(username) on delete cascade,
-  body                text not null,
-  channel             text not null default 'app',  -- 'app' | 'sms' | 'whatsapp'
-  platform            text default 'General',
-  created_at          timestamptz default now()
-);
-
-create index if not exists messages_thread_id_idx on messages(thread_id);
-create index if not exists messages_recipient_idx  on messages(recipient_username);
-
-alter table messages enable row level security;
-
--- Anonymous (public bio page) sends are allowed
-create policy "Anyone can send an anonymous message"
-  on messages for insert
-  with check (sender_id is null);
-
--- Authenticated users can send (including replies)
-create policy "Authenticated users can send messages"
-  on messages for insert to authenticated
-  with check (auth.uid() = sender_id);
-
--- Recipients can read messages addressed to them
-create policy "Recipients can read their own messages"
-  on messages for select
-  using (
-    auth.uid() = (
-      select id from profiles where username = recipient_username limit 1
-    )
-  );
-
--- Senders can read messages they sent (to see replies)
-create policy "Senders can read their sent messages"
-  on messages for select
-  using (auth.uid() = sender_id);
-
--- ─────────────────────────────────────────────
--- CONTACTS
--- ─────────────────────────────────────────────
-create table if not exists contacts (
-  id               uuid primary key default gen_random_uuid(),
-  user_id          uuid not null references auth.users(id) on delete cascade,
-  contact_username text not null references profiles(username) on delete cascade,
-  is_favorite      boolean not null default false,
-  created_at       timestamptz default now(),
-  unique(user_id, contact_username)
-);
-
-alter table contacts enable row level security;
-
-create policy "Users can view their own contacts"
-  on contacts for select using (auth.uid() = user_id);
-
-create policy "Users can insert their own contacts"
-  on contacts for insert with check (auth.uid() = user_id);
-
-create policy "Users can update their own contacts"
-  on contacts for update using (auth.uid() = user_id);
-
-create policy "Users can delete their own contacts"
-  on contacts for delete using (auth.uid() = user_id);
-
--- ─────────────────────────────────────────────
 -- CHANNELS
--- Each user has one row per channel type.
--- value = phone number (whatsapp/sms), email, or postal address (post).
--- default_access = 'everyone' means visible to all on the bio page;
--- 'selected' means only users in channel_access can see it.
+-- One row per (user, channel_type). The `value` stores the raw detail
+-- (phone / email / url / handle) — this is NEVER exposed on the public
+-- profile unless access_mode = 'open'.
+--
+-- access_mode controls visibility on the public profile:
+--   open      → detail is directly visible / clickable by anyone
+--   request   → channel is listed but details hidden; requires approval
+--   selected  → only usernames in channel_access can see it
+--   hidden    → not shown on the profile at all
 -- ─────────────────────────────────────────────
 create table if not exists channels (
-  id             uuid primary key default gen_random_uuid(),
-  user_id        uuid not null references auth.users(id) on delete cascade,
-  type           text not null check (type in ('whatsapp', 'sms', 'email', 'post')),
-  enabled        boolean not null default false,
-  verified       boolean not null default false,
-  value          text,
-  default_access text not null default 'everyone' check (default_access in ('everyone', 'selected')),
-  created_at     timestamptz default now(),
+  id          uuid primary key default gen_random_uuid(),
+  user_id     uuid not null references auth.users(id) on delete cascade,
+  type        text not null check (type in (
+    'whatsapp', 'sms', 'phone', 'email',
+    'telegram', 'signal', 'instagram',
+    'website',  'booking'
+  )),
+  value       text,                                   -- phone / email / url / handle
+  verified    boolean not null default false,         -- twilio-verified for phone types
+  access_mode text not null default 'hidden' check (access_mode in (
+    'open', 'request', 'selected', 'hidden'
+  )),
+  created_at  timestamptz default now(),
   unique(user_id, type)
 );
 
 alter table channels enable row level security;
 
-create policy "Users can manage their own channels"
+create policy "Anyone can read channel metadata (type + access_mode only)"
+  on channels for select using (true);
+
+create policy "Owner can manage own channels"
   on channels for all
-  using (auth.uid() = user_id)
+  using  (auth.uid() = user_id)
   with check (auth.uid() = user_id);
 
 -- ─────────────────────────────────────────────
 -- CHANNEL ACCESS
--- When a channel's default_access is 'selected', only usernames
--- listed here can see that channel on the owner's bio page.
+-- Username-level allowlist for access_mode = 'selected'.
 -- ─────────────────────────────────────────────
 create table if not exists channel_access (
   id               uuid primary key default gen_random_uuid(),
@@ -142,5 +88,51 @@ alter table channel_access enable row level security;
 
 create policy "Channel owner can manage access list"
   on channel_access for all
-  using  (auth.uid() = (select user_id from channels where id = channel_id limit 1))
+  using      (auth.uid() = (select user_id from channels where id = channel_id limit 1))
   with check (auth.uid() = (select user_id from channels where id = channel_id limit 1));
+
+create policy "Allowed user can see their own entry"
+  on channel_access for select
+  using (
+    allowed_username = (select username from profiles where id = auth.uid() limit 1)
+  );
+
+-- ─────────────────────────────────────────────
+-- CONNECTION REQUESTS
+-- Someone asks an owner for access to a specific channel.
+-- Owner may approve, deny, or redirect to another channel.
+-- ─────────────────────────────────────────────
+create table if not exists connection_requests (
+  id                  uuid primary key default gen_random_uuid(),
+  requester_id        uuid not null references auth.users(id) on delete cascade,
+  requester_username  text not null,
+  owner_id            uuid not null references auth.users(id) on delete cascade,
+  owner_username      text not null,
+  channel_type        text not null,                  -- requested channel
+  reason              text,                           -- why do you want to connect?
+  status              text not null default 'pending' check (status in (
+    'pending', 'approved', 'denied', 'redirected'
+  )),
+  redirected_to       text,                           -- channel type the owner suggested instead
+  created_at          timestamptz default now(),
+  responded_at        timestamptz
+);
+
+create index if not exists connection_requests_owner_idx
+  on connection_requests(owner_id, status, created_at desc);
+create index if not exists connection_requests_requester_idx
+  on connection_requests(requester_id, created_at desc);
+
+alter table connection_requests enable row level security;
+
+create policy "Requester can insert own request"
+  on connection_requests for insert to authenticated
+  with check (auth.uid() = requester_id);
+
+create policy "Owner and requester can read their requests"
+  on connection_requests for select
+  using (auth.uid() = owner_id or auth.uid() = requester_id);
+
+create policy "Owner can update (approve/deny/redirect) requests"
+  on connection_requests for update
+  using (auth.uid() = owner_id);
