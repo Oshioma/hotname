@@ -89,11 +89,11 @@ export default async function DashboardPage() {
             {profile?.bio && <p className="identity-bio">{profile.bio}</p>}
             {shareDisplay && (
               <div className="identity-link-row">
-                <Link href={`/${username}`} target="_blank" className="identity-link">
-                  {shareDisplay}
-                </Link>
                 <Link href={`/${username}`} target="_blank" className="identity-view">
                   View profile →
+                </Link>
+                <Link href={`/${username}`} target="_blank" className="identity-link">
+                  {shareDisplay}
                 </Link>
               </div>
             )}
