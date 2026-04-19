@@ -552,6 +552,50 @@ nav {
 .access-badge.pending  { background: var(--warn-soft);   color: var(--warn); }
 .access-badge.denied   { background: var(--deny-soft);   color: var(--deny); }
 
+/* ─── AVAILABLE-ON CHIP ROW ─── */
+.available-on {
+  max-width: 520px;
+  margin: 0.5rem auto 1.2rem;
+  padding: 0 1.5rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+}
+.available-on-label {
+  font-size: 11px;
+  color: var(--text-soft);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  font-weight: 500;
+}
+.available-on-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  justify-content: center;
+}
+.avail-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  border-radius: 999px;
+  font-size: 13px;
+  font-weight: 500;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  color: var(--text);
+}
+.avail-chip.avail-direct   { background: var(--ok-soft);     border-color: #c9e0cc; color: var(--ok); }
+.avail-chip.avail-allowed  { background: var(--accent-soft); border-color: var(--accent); color: var(--accent-text); }
+.avail-chip.avail-approval { background: var(--surface); color: var(--text); }
+.avail-chip-mode {
+  font-size: 11px;
+  font-weight: 400;
+  opacity: 0.75;
+}
+
 /* Request-connection section */
 .request-box {
   max-width: 520px;

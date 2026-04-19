@@ -3,9 +3,7 @@ import Link from 'next/link';
 import { createClient } from '@/lib/supabase/server';
 import { createServiceClient } from '@/lib/supabase/service';
 import { CHANNEL_META, CHANNEL_ORDER, ACCESS_LABEL } from '@/lib/channelMeta';
-import MessageComposer from './MessageComposer';
-
-export async function generateMetadata({ params }) {
+import MessageComposer from './MessageComposer';export async function generateMetadata({ params }) {
   const { username } = await params;
   return {
     title: `@${username} — Hotname`,
@@ -125,6 +123,29 @@ export default async function ProfilePage({ params }) {
           </div>
         )}
       </section>
+
+      {channels.length > 0 && (
+        <div className="available-on">
+          <span className="available-on-label">Available on</span>
+          <div className="available-on-chips">
+            {channels.map((ch) => {
+              const meta = CHANNEL_META[ch.type];
+              if (!meta) return null;
+              const modeLabel =
+                ch.mode === 'direct'   ? ACCESS_LABEL.open :
+                ch.mode === 'allowed'  ? ACCESS_LABEL.selected :
+                ch.mode === 'approval' ? ACCESS_LABEL.request :
+                '';
+              return (
+                <span key={ch.type} className={`avail-chip avail-${ch.mode}`}>
+                  {meta.label}
+                  {modeLabel && <span className="avail-chip-mode">· {modeLabel}</span>}
+                </span>
+              );
+            })}
+          </div>
+        </div>
+      )}
 
       <div className="request-box">
         {!viewer ? (
