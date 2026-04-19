@@ -55,6 +55,7 @@ export default async function DashboardPage() {
       <nav>
         <Link href="/dashboard"><span className="logo">hotname<span className="logo-dot" /></span></Link>
         <div className="nav-actions">
+          <Link href="/find"><button className="btn-ghost">Find</button></Link>
           <Link href="/channels"><button className="btn-ghost">Channels</button></Link>
           <Link href="/settings"><button className="btn-ghost">Settings</button></Link>
           <form action="/api/auth" method="POST" style={{ display: 'inline' }}>

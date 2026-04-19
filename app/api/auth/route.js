@@ -39,7 +39,9 @@ export async function POST(request) {
   // ── Sign out ──────────────────────────────────────────────────────────────
   if (action === 'signout') {
     await supabase.auth.signOut();
-    return NextResponse.redirect(new URL('/', request.url));
+    // 303 forces the browser to follow with a GET; 307 (the default) would
+    // keep the POST and hit the home page as POST, which errors out.
+    return NextResponse.redirect(new URL('/', request.url), 303);
   }
 
   // ── Login ─────────────────────────────────────────────────────────────────
