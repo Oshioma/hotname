@@ -17,10 +17,17 @@ export async function GET() {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return NextResponse.json({ error: 'Unauthorized.' }, { status: 401 });
 
-  const { data: rows } = await supabase
-    .from('channels')
-    .select('id, type, value, verified, access_mode')
-    .eq('user_id', user.id);
+  const [{ data: rows }, { data: profile }] = await Promise.all([
+    supabase
+      .from('channels')
+      .select('id, type, value, verified, access_mode')
+      .eq('user_id', user.id),
+    supabase
+      .from('profiles')
+      .select('phone_number, email')
+      .eq('id', user.id)
+      .maybeSingle(),
+  ]);
 
   const existing = Object.fromEntries((rows ?? []).map((r) => [r.type, r]));
 
@@ -57,7 +64,12 @@ export async function GET() {
     };
   });
 
-  return NextResponse.json({ channels });
+  const profileDefaults = {
+    phone: profile?.phone_number ?? null,
+    email: profile?.email ?? null,
+  };
+
+  return NextResponse.json({ channels, profileDefaults });
 }
 
 /**

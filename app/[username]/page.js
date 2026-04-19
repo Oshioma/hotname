@@ -133,7 +133,7 @@ export default async function ProfilePage({ params }) {
             const meta = CHANNEL_META[ch.type];
             if (!meta) return null;
             const badgeClass = ch.revealValue ? 'open' : ch.access_mode;
-            const badgeLabel = ch.revealValue ? 'Open' : ACCESS_LABEL[ch.access_mode];
+            const badgeLabel = ch.revealValue ? 'Public' : ACCESS_LABEL[ch.access_mode];
 
             if (ch.revealValue && ch.value) {
               return (
