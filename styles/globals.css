@@ -289,6 +289,44 @@ nav {
 }
 .hero .cta { display: inline-flex; gap: 10px; flex-wrap: wrap; justify-content: center; }
 
+/* Hero search — live results with one-click Request */
+.home-search {
+  max-width: 480px;
+  margin: 0 auto 1.25rem;
+  text-align: left;
+}
+.home-search .search-input {
+  background: var(--surface);
+}
+.home-search-results {
+  margin-top: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  max-height: 320px;
+  overflow-y: auto;
+}
+.home-search-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 4px 6px 4px 4px;
+}
+.home-search-row .search-result {
+  flex: 1;
+  min-width: 0;
+  border-radius: var(--radius-sm);
+}
+.home-search-request {
+  padding: 8px 16px;
+  font-size: 13px;
+  flex-shrink: 0;
+}
+.home-search-request:disabled { opacity: 0.6; }
+
 .how {
   max-width: 900px;
   margin: 2rem auto 0;

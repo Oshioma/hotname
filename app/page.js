@@ -1,13 +1,17 @@
 import Link from 'next/link';
 import Logo from '@/app/components/Logo';
+import HomeSearch from '@/app/HomeSearch';
+import { createClient } from '@/lib/supabase/server';
 
-export default function Home() {
+export default async function Home() {
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+
   return (
     <>
       <nav>
         <Link href="/"><Logo /></Link>
         <div className="nav-actions">
-          <Link href="/find"><button className="btn-ghost">Find a Hotname</button></Link>
           <Link href="/login"><button className="btn-ghost">Log in</button></Link>
           <Link href="/signup"><button className="btn-primary">Claim yours</button></Link>
         </div>
@@ -19,12 +23,11 @@ export default function Home() {
           <br />is all they need.
         </h1>
         <p className="lede">
-          Share one name. Let people reach you through the channels you choose —
-          without exposing everything.
+          Share one name. Choose how you let people reach you without exposing anything!
         </p>
+        <HomeSearch viewerLoggedIn={!!user} />
         <div className="cta">
           <Link href="/signup"><button className="btn-primary">Claim your Hotname</button></Link>
-          <Link href="/find"><button className="btn-outline">Find a Hotname</button></Link>
         </div>
       </section>
 
