@@ -192,7 +192,7 @@ export default function ChannelRow({ channel, profileDefaults, onRefresh }) {
             onClick={() => handleSetMode(mode)}
             title={
               mode === 'open' && channel.private_value
-                ? `Anyone can send — your ${channel.label.toLowerCase()} stays private`
+                ? 'Anyone can send — your address stays private'
                 : ACCESS_LABEL[mode]
             }
           >
@@ -203,7 +203,7 @@ export default function ChannelRow({ channel, profileDefaults, onRefresh }) {
 
       {channel.private_value && channel.access_mode !== 'hidden' && (
         <div className="ch-simple-note">
-          🔒 Your {channel.label.toLowerCase()} stays private — we send the {channel.label.toLowerCase()} for you.
+          🔒 Your address stays private — we send the post for you.
         </div>
       )}
 
