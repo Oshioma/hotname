@@ -51,7 +51,7 @@ create table if not exists channels (
   type        text not null check (type in (
     'whatsapp', 'sms', 'phone', 'email',
     'telegram', 'signal', 'instagram',
-    'website',  'booking'
+    'website',  'booking', 'post'
   )),
   value       text,                                   -- phone / email / url / handle
   verified    boolean not null default false,         -- twilio-verified for phone types

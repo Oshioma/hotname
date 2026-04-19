@@ -131,10 +131,11 @@ export default function ChannelRow({ channel, profileDefaults, onRefresh }) {
   }
 
   const placeholder =
-    channel.kind === 'phone'  ? '+447911123456' :
-    channel.kind === 'email'  ? 'you@example.com' :
-    channel.kind === 'url'    ? 'https://…' :
-                                '@username';
+    channel.kind === 'phone'   ? '+447911123456' :
+    channel.kind === 'email'   ? 'you@example.com' :
+    channel.kind === 'url'     ? 'https://…' :
+    channel.kind === 'address' ? '10 Downing Street, London SW1A 2AA' :
+                                 '@username';
 
   return (
     <div className={`ch-simple${channel.access_mode !== 'hidden' ? ' ch-simple-on' : ''}`}>

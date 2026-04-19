@@ -88,6 +88,16 @@ export default async function ProfilePage({ params }) {
     (a, b) => CHANNEL_ORDER.indexOf(a.type) - CHANNEL_ORDER.indexOf(b.type)
   );
 
+  // The composer only offers channels Hotname can actually route a message
+  // through (WhatsApp / SMS / Email), plus any channel in Request mode — a
+  // Request is a message to the owner asking for that channel's value.
+  // Everything else (Instagram, Website, Telegram, etc. when Public) just
+  // lives as a clickable chip above.
+  const composerChannels = channels.filter((c) => {
+    if (c.mode === 'approval') return true;
+    return CHANNEL_META[c.type]?.deliverable;
+  });
+
   const initials = (profile.display_name || profile.username)
     .split(' ').map((w) => w[0]).join('').toUpperCase().slice(0, 2);
 
@@ -174,12 +184,14 @@ export default async function ProfilePage({ params }) {
           <div className="auth-nudge">
             This is your own profile. <Link href="/channels">Edit your channels →</Link>
           </div>
-        ) : channels.length === 0 ? (
-          <div className="empty">@{profile.username} isn&apos;t accepting messages right now.</div>
+        ) : composerChannels.length === 0 ? (
+          channels.length === 0 ? (
+            <div className="empty">@{profile.username} isn&apos;t accepting messages right now.</div>
+          ) : null
         ) : (
           <MessageComposer
             ownerUsername={profile.username}
-            channels={channels}
+            channels={composerChannels}
             recentStatuses={requestsByType}
             viewerLoggedIn={!!viewer}
           />
