@@ -14,7 +14,7 @@ const MAX = 500;
  *   - 'approval' (Request) → stored as a pending request for the owner to
  *                            approve or decline before it's delivered
  */
-export default function MessageComposer({ ownerUsername, channels, recentStatuses = {}, viewerLoggedIn = true }) {
+export default function MessageComposer({ ownerUsername, channels, recentStatuses = {}, viewerLoggedIn = true, isSelf = false }) {
   const router = useRouter();
   const [channel, setChannel] = useState(channels[0]?.type ?? '');
   const [body, setBody] = useState('');
@@ -81,9 +81,11 @@ export default function MessageComposer({ ownerUsername, channels, recentStatuse
 
   return (
     <form className="request-form" onSubmit={handleSubmit}>
-      <h3>Send @{ownerUsername} a message</h3>
+      <h3>{isSelf ? 'Message yourself' : `Send @${ownerUsername} a message`}</h3>
       <p className="hint">
-        You never see their contact details — Hotname routes the message to the channel they&apos;ve opened.
+        {isSelf
+          ? 'A note to yourself. Lands in your own Hotname inbox — nothing is sent out.'
+          : 'You never see their contact details — Hotname routes the message to the channel they\u2019ve opened.'}
       </p>
 
       {error && <p className="error-msg">{error}</p>}

@@ -58,22 +58,23 @@ export async function POST(request) {
     .from('profiles').select('id, username').eq('username', owner_username.toLowerCase()).maybeSingle();
   if (!owner) return NextResponse.json({ error: 'Hotname not found.' }, { status: 404 });
 
-  if (owner.id === user.id) {
-    return NextResponse.json({ error: 'You cannot message yourself.' }, { status: 400 });
-  }
+  const isSelf = owner.id === user.id;
 
   // Gate: there must be an accepted user-level connection between these two.
-  const { data: connection } = await service
-    .from('user_connections')
-    .select('status')
-    .eq('requester_id', user.id)
-    .eq('owner_id', owner.id)
-    .maybeSingle();
-  if (!connection || connection.status !== 'accepted') {
-    return NextResponse.json(
-      { error: 'Request a connection first.', needs_connection: true },
-      { status: 403 },
-    );
+  // Self-messages bypass the gate (you don't need permission to DM yourself).
+  if (!isSelf) {
+    const { data: connection } = await service
+      .from('user_connections')
+      .select('status')
+      .eq('requester_id', user.id)
+      .eq('owner_id', owner.id)
+      .maybeSingle();
+    if (!connection || connection.status !== 'accepted') {
+      return NextResponse.json(
+        { error: 'Request a connection first.', needs_connection: true },
+        { status: 403 },
+      );
+    }
   }
 
   const { data: channel } = await service
@@ -136,8 +137,10 @@ export async function POST(request) {
   if (insertError) return NextResponse.json({ error: insertError.message }, { status: 500 });
 
   // Try to deliver via Twilio when we auto-approved and the owner has a phone.
+  // Skip external delivery on self-messages — the inbox row is enough; no point
+  // texting yourself.
   let delivered = false;
-  if (status === 'approved' && channel.value) {
+  if (status === 'approved' && channel.value && !isSelf) {
     try {
       delivered = await deliverMessage(channel_type, channel.value, requesterProfile.username, message);
     } catch (err) {

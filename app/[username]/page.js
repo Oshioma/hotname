@@ -74,7 +74,8 @@ export default async function ProfilePage({ params }) {
 
   const isSelf = viewer && viewer.id === profile.id;
   const connectionStatus = isSelf ? 'self' : (connection?.status ?? null);
-  const canMessage = connectionStatus === 'accepted';
+  // Self can always message themselves (goes to their own inbox).
+  const canMessage = isSelf || connectionStatus === 'accepted';
 
   // Decide which channels this viewer can see + which delivery mode applies.
   //   mode = 'direct'  → Public channel, message delivers immediately
@@ -202,19 +203,29 @@ export default async function ProfilePage({ params }) {
       )}
 
       <div className="request-box">
-        {isSelf ? (
-          <div className="auth-nudge">
-            This is your own profile. <Link href="/channels">Edit your channels →</Link>
+        {isSelf && (
+          <div className="self-banner">
+            <span>This is your own profile — preview of what others see.</span>
+            <Link href="/channels" style={{ color: 'var(--accent-text)', fontSize: '12px' }}>
+              Edit channels →
+            </Link>
           </div>
-        ) : canMessage ? (
+        )}
+
+        {canMessage ? (
           composerChannels.length === 0 ? (
-            <div className="empty">@{profile.username} hasn&apos;t opened any message channels.</div>
+            <div className="empty">
+              {isSelf
+                ? 'Open a channel on /channels to see the composer here.'
+                : `@${profile.username} hasn't opened any message channels.`}
+            </div>
           ) : (
             <MessageComposer
               ownerUsername={profile.username}
               channels={composerChannels}
               recentStatuses={requestsByType}
               viewerLoggedIn={!!viewer}
+              isSelf={isSelf}
             />
           )
         ) : (
