@@ -24,6 +24,13 @@ export default function RequestCard({ request }) {
 
   const meta = CHANNEL_META[request.channel_type];
   const initials = request.requester_username.slice(0, 2).toUpperCase();
+  const channelLabel = meta?.label ?? request.channel_type;
+  const subtitle =
+    request.status === 'pending' ? `wants to reach you on ${channelLabel}`
+    : request.status === 'approved' ? `messaged you via ${channelLabel}`
+    : request.status === 'denied' ? `was declined (${channelLabel})`
+    : request.status === 'redirected' ? `redirected (${channelLabel})`
+    : channelLabel;
 
   async function respond(action, redirect_to) {
     setBusy(true);
@@ -60,7 +67,7 @@ export default function RequestCard({ request }) {
         <div className="req-avatar">{initials}</div>
         <div className="req-who">
           <div className="name">@{request.requester_username}</div>
-          <div className="handle">asking for {meta?.label ?? request.channel_type}</div>
+          <div className="handle">{subtitle}</div>
         </div>
         <span className="req-age">{formatAgo(request.created_at)}</span>
       </div>

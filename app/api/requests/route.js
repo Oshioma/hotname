@@ -4,12 +4,21 @@ import { createServiceClient } from '@/lib/supabase/service';
 import { CHANNEL_META } from '@/lib/channelMeta';
 import { sendSms, sendWhatsApp } from '@/lib/twilio';
 
-const MAX_REASON = 300;
+const MAX_REASON = 500;
 
 /**
  * POST /api/requests
  * Body: { owner_username, channel_type, reason }
- * Creates a connection request. Requester must be authenticated.
+ *
+ * The viewer writes one message and picks a channel the owner has opened.
+ * Access mode decides what happens next:
+ *   open     (Public) → saved as approved, delivered immediately
+ *   selected (Invite) → if viewer is on the allowlist, delivered immediately
+ *   request  (Request)→ saved as pending, owner approves/declines in /requests
+ *   hidden            → refused
+ *
+ * Response: { ok, delivered, status } so the composer can say "delivered" vs
+ * "pending approval".
  */
 export async function POST(request) {
   let body;
@@ -25,24 +34,24 @@ export async function POST(request) {
   if (!channel_type || !CHANNEL_META[channel_type]) {
     return NextResponse.json({ error: 'Unknown channel type.' }, { status: 400 });
   }
-  const trimmedReason = (reason ?? '').trim();
-  if (!trimmedReason) {
-    return NextResponse.json({ error: 'Please say why you want to connect.' }, { status: 400 });
+  const message = (reason ?? '').trim();
+  if (!message) {
+    return NextResponse.json({ error: 'Please write a message.' }, { status: 400 });
   }
-  if (trimmedReason.length > MAX_REASON) {
-    return NextResponse.json({ error: `Reason must be ${MAX_REASON} characters or fewer.` }, { status: 400 });
+  if (message.length > MAX_REASON) {
+    return NextResponse.json({ error: `Message must be ${MAX_REASON} characters or fewer.` }, { status: 400 });
   }
 
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
-  if (!user) return NextResponse.json({ error: 'Sign in to request a connection.' }, { status: 401 });
+  if (!user) return NextResponse.json({ error: 'Sign in to send a message.' }, { status: 401 });
 
   const service = createServiceClient();
 
   const { data: requesterProfile } = await service
     .from('profiles').select('username').eq('id', user.id).maybeSingle();
   if (!requesterProfile) {
-    return NextResponse.json({ error: 'Complete your profile before requesting.' }, { status: 400 });
+    return NextResponse.json({ error: 'Complete your profile first.' }, { status: 400 });
   }
 
   const { data: owner } = await service
@@ -50,55 +59,85 @@ export async function POST(request) {
   if (!owner) return NextResponse.json({ error: 'Hotname not found.' }, { status: 404 });
 
   if (owner.id === user.id) {
-    return NextResponse.json({ error: 'You cannot request your own profile.' }, { status: 400 });
+    return NextResponse.json({ error: 'You cannot message yourself.' }, { status: 400 });
   }
 
-  // Owner must have that channel in 'request' mode
   const { data: channel } = await service
     .from('channels')
-    .select('access_mode')
+    .select('id, access_mode, value')
     .eq('user_id', owner.id)
     .eq('type', channel_type)
     .maybeSingle();
-  if (!channel || channel.access_mode !== 'request') {
-    return NextResponse.json({ error: 'That channel is not open to requests.' }, { status: 400 });
+  if (!channel || channel.access_mode === 'hidden') {
+    return NextResponse.json({ error: 'That channel is not available.' }, { status: 400 });
   }
 
-  // Block if there is already a pending request for this pair+channel
-  const { data: existing } = await service
-    .from('connection_requests')
-    .select('id, status')
-    .eq('owner_id', owner.id)
-    .eq('requester_id', user.id)
-    .eq('channel_type', channel_type)
-    .eq('status', 'pending')
-    .maybeSingle();
-  if (existing) {
-    return NextResponse.json({ error: 'You already have a pending request for this channel.' }, { status: 409 });
+  // Decide the initial status.
+  let status = null;
+  if (channel.access_mode === 'open') {
+    status = 'approved';
+  } else if (channel.access_mode === 'request') {
+    status = 'pending';
+  } else if (channel.access_mode === 'selected') {
+    const { data: allow } = await service
+      .from('channel_access')
+      .select('id')
+      .eq('channel_id', channel.id)
+      .eq('allowed_username', requesterProfile.username)
+      .maybeSingle();
+    if (!allow) {
+      return NextResponse.json({ error: 'This channel is invite-only.' }, { status: 403 });
+    }
+    status = 'approved';
   }
 
-  const { error } = await service.from('connection_requests').insert({
+  // Block duplicate pending requests for the same pair+channel
+  if (status === 'pending') {
+    const { data: existing } = await service
+      .from('connection_requests')
+      .select('id')
+      .eq('owner_id', owner.id)
+      .eq('requester_id', user.id)
+      .eq('channel_type', channel_type)
+      .eq('status', 'pending')
+      .maybeSingle();
+    if (existing) {
+      return NextResponse.json({ error: 'You already have a pending request for this channel.' }, { status: 409 });
+    }
+  }
+
+  const nowIso = new Date().toISOString();
+  const insertPayload = {
     requester_id: user.id,
     requester_username: requesterProfile.username,
     owner_id: owner.id,
     owner_username: owner.username,
     channel_type,
-    reason: trimmedReason,
-  });
+    reason: message,
+    status,
+  };
+  if (status === 'approved') insertPayload.responded_at = nowIso;
 
-  if (error) return NextResponse.json({ error: error.message }, { status: 500 });
-  return NextResponse.json({ ok: true });
+  const { error: insertError } = await service.from('connection_requests').insert(insertPayload);
+  if (insertError) return NextResponse.json({ error: insertError.message }, { status: 500 });
+
+  // Try to deliver via Twilio when we auto-approved and the owner has a phone.
+  let delivered = false;
+  if (status === 'approved' && channel.value) {
+    try {
+      delivered = await deliverMessage(channel_type, channel.value, requesterProfile.username, message);
+    } catch (err) {
+      console.warn('[hotname] delivery skipped:', err?.message);
+    }
+  }
+
+  return NextResponse.json({ ok: true, status, delivered });
 }
 
 /**
  * PATCH /api/requests
  * Body: { id, action: 'approve' | 'deny' | 'redirect', redirect_to? }
  * Owner only.
- *
- * On approve, we optionally trigger Twilio delivery: when the owner's
- * requested channel is whatsapp/sms, we send the requester a short
- * notice with the raw channel value so they can reach out directly.
- * If Twilio is not configured we silently skip delivery.
  */
 export async function PATCH(request) {
   let body;
@@ -122,7 +161,7 @@ export async function PATCH(request) {
 
   const { data: req } = await service
     .from('connection_requests')
-    .select('id, owner_id, channel_type, requester_id')
+    .select('id, owner_id, channel_type, requester_id, requester_username, reason')
     .eq('id', id)
     .maybeSingle();
   if (!req) return NextResponse.json({ error: 'Request not found.' }, { status: 404 });
@@ -141,39 +180,49 @@ export async function PATCH(request) {
     .eq('id', id);
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
 
-  // Best-effort Twilio delivery when approving phone-backed channels.
+  // On approve: deliver the stored message to the owner's channel target.
   if (action === 'approve') {
-    try {
-      await notifyRequester(service, req.owner_id, req.requester_id, req.channel_type);
-    } catch (err) {
-      // Delivery failure should not fail the approval.
-      console.warn('[hotname] Twilio delivery skipped:', err?.message);
+    const { data: channel } = await service
+      .from('channels')
+      .select('value')
+      .eq('user_id', req.owner_id)
+      .eq('type', req.channel_type)
+      .maybeSingle();
+
+    if (channel?.value && req.reason) {
+      try {
+        await deliverMessage(req.channel_type, channel.value, req.requester_username, req.reason);
+      } catch (err) {
+        console.warn('[hotname] delivery skipped:', err?.message);
+      }
     }
   }
 
   return NextResponse.json({ ok: true });
 }
 
-async function notifyRequester(service, ownerId, requesterId, channelType) {
-  // Only wire Twilio for phone-backed channels where we can reach the requester.
+/**
+ * Deliver a message to `target` through the given channel.
+ * Right now only WhatsApp + SMS are wired up through Twilio — everything else
+ * is stored in the owner's /requests inbox for them to see.
+ * Returns true when an external delivery actually happened.
+ */
+async function deliverMessage(channelType, target, senderUsername, message) {
   const meta = CHANNEL_META[channelType];
-  if (!meta) return;
+  if (!meta || !target) return false;
 
-  const { data: owner } = await service
-    .from('profiles').select('username').eq('id', ownerId).maybeSingle();
-  if (!owner) return;
-
-  const { data: requester } = await service
-    .from('profiles').select('phone_number').eq('id', requesterId).maybeSingle();
-  if (!requester?.phone_number) return;
-
-  const msg =
-    `Hotname: @${owner.username} approved your request for ${meta.label}. ` +
-    `Open their profile to see the details.`;
+  const body = `From @${senderUsername} via Hotname:\n\n${message}`;
 
   if (channelType === 'whatsapp') {
-    await sendWhatsApp(requester.phone_number, msg);
-  } else {
-    await sendSms(requester.phone_number, msg);
+    await sendWhatsApp(target, body);
+    return true;
   }
+  if (channelType === 'sms') {
+    await sendSms(target, body);
+    return true;
+  }
+  // Email / telegram / instagram / website / booking / phone / signal
+  // — no direct transport from the server yet. The message lives in the
+  // owner's /requests inbox as the `reason` field so they can follow up.
+  return false;
 }

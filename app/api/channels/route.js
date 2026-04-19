@@ -4,6 +4,7 @@ import {
   CHANNEL_META,
   CHANNEL_ORDER,
   ACCESS_MODES,
+  normaliseChannelValue,
   validateChannelValue,
 } from '@/lib/channelMeta';
 
@@ -84,7 +85,7 @@ export async function PATCH(request) {
     return NextResponse.json({ error: 'Invalid JSON.' }, { status: 400 });
   }
 
-  const { type, value, access_mode } = body ?? {};
+  const { type, value: rawValue, access_mode } = body ?? {};
 
   if (!CHANNEL_META[type]) {
     return NextResponse.json({ error: 'Invalid channel type.' }, { status: 400 });
@@ -92,6 +93,13 @@ export async function PATCH(request) {
   if (access_mode !== undefined && !ACCESS_MODES.includes(access_mode)) {
     return NextResponse.json({ error: 'Invalid access_mode.' }, { status: 400 });
   }
+
+  // Normalise then validate so users can type 07951… or www.foo.com
+  const value =
+    rawValue !== undefined && rawValue !== null && rawValue !== ''
+      ? normaliseChannelValue(type, rawValue)
+      : rawValue;
+
   if (value !== undefined && value !== null && value !== '') {
     const validationError = validateChannelValue(type, value);
     if (validationError) return NextResponse.json({ error: validationError }, { status: 400 });
