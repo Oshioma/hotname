@@ -289,6 +289,48 @@ nav {
 }
 .hero .cta { display: inline-flex; gap: 10px; flex-wrap: wrap; justify-content: center; }
 
+/* Signup — step 1, pick a Hotname */
+.signup-pick h2 { font-size: 1.8rem; letter-spacing: -0.02em; }
+.signup-pick-input {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 10px 14px;
+  margin-top: 0.5rem;
+  transition: border-color .15s, background .15s;
+}
+.signup-pick-input:focus-within { border-color: var(--accent); background: #fff; }
+.signup-pick-input .at {
+  font-size: 1.5rem;
+  color: var(--text-muted);
+  font-weight: 500;
+}
+.signup-pick-input input {
+  flex: 1;
+  min-width: 0;
+  border: none;
+  outline: none;
+  background: transparent;
+  font-size: 1.5rem;
+  font-weight: 500;
+  letter-spacing: -0.01em;
+  color: var(--text);
+  font-family: inherit;
+  padding: 4px 2px;
+}
+.signup-pick-status {
+  margin-top: 8px;
+  font-size: 13px;
+  min-height: 20px;
+  color: var(--text-muted);
+}
+.signup-pick-available { color: var(--ok); font-weight: 500; }
+.signup-pick-taken     { color: var(--deny); font-weight: 500; }
+.signup-pick-invalid   { color: var(--warn); }
+
 /* Hero search — live results with one-click Request */
 .home-search {
   max-width: 480px;
