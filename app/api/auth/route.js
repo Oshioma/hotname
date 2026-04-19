@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@/lib/supabase/server';
+import { createServiceClient } from '@/lib/supabase/service';
 
 const PHONE_RE = /^\+[1-9]\d{6,14}$/;
 
@@ -61,32 +62,47 @@ export async function POST(request) {
       );
     }
 
-    // Check username uniqueness
-    const { data: existing } = await supabase
+    const service = createServiceClient();
+    const handle = username.toLowerCase();
+
+    // Check username uniqueness via service role (no auth needed)
+    const { data: existing } = await service
       .from('profiles')
       .select('id')
-      .eq('username', username.toLowerCase())
+      .eq('username', handle)
       .maybeSingle();
 
     if (existing) {
       return NextResponse.json({ error: 'That username is already taken.' }, { status: 409 });
     }
 
-    const { data, error } = await supabase.auth.signUp({ email, password });
+    const { data, error } = await supabase.auth.signUp({
+      email,
+      password,
+      options: { emailRedirectTo: `${siteUrl}/auth/callback?next=/dashboard` },
+    });
     if (error) {
       return NextResponse.json({ error: error.message }, { status: 400 });
     }
 
+    // Use the service role client so the insert works whether or not the
+    // user has an active session yet (email confirmation may be enabled).
     if (data.user) {
-      const { error: profileError } = await supabase.from('profiles').insert({
+      const { error: profileError } = await service.from('profiles').insert({
         id: data.user.id,
-        username: username.toLowerCase(),
-        display_name: display_name?.trim() || username,
+        username: handle,
+        display_name: display_name?.trim() || handle,
         email,
         phone_number: phone_number || null,
       });
       if (profileError) {
-        return NextResponse.json({ error: 'Account created but profile setup failed. Please contact support.' }, { status: 500 });
+        // Roll back the auth user so they can retry with the same email.
+        await service.auth.admin.deleteUser(data.user.id).catch(() => {});
+        const msg =
+          profileError.code === '23505'
+            ? 'That username is already taken.'
+            : 'Could not set up your profile. Please try again.';
+        return NextResponse.json({ error: msg }, { status: 500 });
       }
     }
 
