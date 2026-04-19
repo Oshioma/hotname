@@ -45,7 +45,6 @@ create policy "Users can update their own profile"
 --
 -- access_mode controls visibility on the public profile:
 --   open      → detail is directly visible / clickable by anyone
---   request   → channel is listed but details hidden; requires approval
 --   selected  → only usernames in channel_access can see it
 --   hidden    → not shown on the profile at all
 -- ─────────────────────────────────────────────
@@ -60,7 +59,7 @@ create table if not exists channels (
   value       text,                                   -- phone / email / url / handle
   verified    boolean not null default false,         -- twilio-verified for phone types
   access_mode text not null default 'hidden' check (access_mode in (
-    'open', 'request', 'selected', 'hidden'
+    'open', 'selected', 'hidden'
   )),
   created_at  timestamptz default now(),
   unique(user_id, type)

@@ -11,8 +11,6 @@ const MAX = 500;
  * the owner has opened, and Hotname routes it:
  *   - 'direct'   (Public)  → delivered straight away
  *   - 'allowed'  (Invite)  → delivered straight away
- *   - 'approval' (Request) → stored as a pending request for the owner to
- *                            approve or decline before it's delivered
  */
 export default function MessageComposer({ ownerUsername, channels, recentStatuses = {}, viewerLoggedIn = true }) {
   const router = useRouter();
@@ -104,7 +102,6 @@ export default function MessageComposer({ ownerUsername, channels, recentStatuse
               title={pending ? 'Previous request is still pending' : ''}
             >
               {meta?.label ?? c.type}
-              {c.mode === 'approval' && <span style={{ fontSize: '10px', marginLeft: '6px', opacity: 0.7 }}>· approval</span>}
               {pending && <span style={{ fontSize: '10px', marginLeft: '6px', opacity: 0.7 }}>· pending</span>}
             </button>
           );
@@ -123,9 +120,7 @@ export default function MessageComposer({ ownerUsername, channels, recentStatuse
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '10px' }}>
         <span style={{ fontSize: '12px', color: 'var(--text-soft)' }}>
           {body.length} / {MAX}
-          {viewerLoggedIn && mode === 'approval' && ' · requires approval'}
-          {viewerLoggedIn && mode === 'direct' && ' · delivered right away'}
-          {viewerLoggedIn && mode === 'allowed' && ' · delivered right away'}
+          {viewerLoggedIn && (mode === 'direct' || mode === 'allowed') && ' · delivered right away'}
           {!viewerLoggedIn && ' · sign in to send'}
         </span>
         <button
@@ -133,7 +128,7 @@ export default function MessageComposer({ ownerUsername, channels, recentStatuse
           type="submit"
           disabled={viewerLoggedIn && (loading || !body.trim() || !channel)}
         >
-          {!viewerLoggedIn ? 'Sign in to send' : (loading ? 'Sending…' : (mode === 'approval' ? 'Request' : 'Send'))}
+          {!viewerLoggedIn ? 'Sign in to send' : (loading ? 'Sending…' : 'Send')}
         </button>
       </div>
     </form>

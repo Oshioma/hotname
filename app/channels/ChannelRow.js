@@ -3,11 +3,11 @@
 import { useEffect, useState } from 'react';
 import { ACCESS_MODES, ACCESS_LABEL } from '@/lib/channelMeta';
 
-const MODE_ORDER = ['hidden', 'request', 'selected', 'open']; // display order, Off → Public
+const MODE_ORDER = ['hidden', 'selected', 'open']; // display order, Off → Public
 
 /**
  * One compact row per channel:
- *   [ Label ]  [ value input (prefilled) + inline Verify if phone ]  [ Off · Request · Invite · Public ]
+ *   [ Label ]  [ value input (prefilled) + inline Verify if phone ]  [ Off · Invite · Public ]
  * If mode === 'selected', an allowlist editor expands below.
  */
 export default function ChannelRow({ channel, profileDefaults, onRefresh }) {

@@ -39,7 +39,6 @@ export default function ChannelsPage() {
         <p style={{ fontSize: '13px', color: 'var(--text-muted)', marginTop: '-0.4rem', marginBottom: '1.2rem', maxWidth: '560px' }}>
           Pick how each channel shows up on your Hotname.
           <strong> Off</strong> hides it ·
-          <strong> Request</strong> requires approval ·
           <strong> Invite</strong> is for people you pick ·
           <strong> Public</strong> shows the detail to anyone.
         </p>

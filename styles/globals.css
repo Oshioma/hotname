@@ -15,10 +15,10 @@
   --text-muted:  #6b6b73;
   --text-soft:   #9a968d;
 
-  /* Accent — muted indigo */
-  --accent:       #5b6ad0;
-  --accent-soft:  #e7e8f6;
-  --accent-text:  #3f4bb0;
+  /* Accent — warm coral */
+  --accent:       #dd6c4d;
+  --accent-soft:  #f9e4db;
+  --accent-text:  #b64c2c;
 
   /* Status */
   --ok:       #6b8e7e;
@@ -718,7 +718,6 @@ nav {
   white-space: nowrap;
 }
 .access-badge.open     { background: var(--ok-soft);     color: var(--ok); }
-.access-badge.request  { background: var(--accent-soft); color: var(--accent-text); }
 .access-badge.selected { background: var(--warn-soft);   color: var(--warn); }
 .access-badge.approved { background: var(--ok-soft);     color: var(--ok); }
 .access-badge.pending  { background: var(--warn-soft);   color: var(--warn); }
@@ -773,7 +772,6 @@ nav {
 }
 .avail-chip.avail-direct   { background: var(--ok-soft);     border-color: #c9e0cc; color: var(--ok); }
 .avail-chip.avail-allowed  { background: var(--accent-soft); border-color: var(--accent); color: var(--accent-text); }
-.avail-chip.avail-approval { background: var(--surface); color: var(--text); }
 .avail-chip-mode {
   font-size: 11px;
   font-weight: 400;

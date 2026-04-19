@@ -14,11 +14,9 @@ const MAX_REASON = 500;
  * Access mode decides what happens next:
  *   open     (Public) → saved as approved, delivered immediately
  *   selected (Invite) → if viewer is on the allowlist, delivered immediately
- *   request  (Request)→ saved as pending, owner approves/declines in /requests
  *   hidden            → refused
  *
- * Response: { ok, delivered, status } so the composer can say "delivered" vs
- * "pending approval".
+ * Response: { ok, delivered } so the composer can confirm delivery.
  */
 export async function POST(request) {
   let body;
@@ -99,8 +97,6 @@ export async function POST(request) {
 
     if (ch.access_mode === 'open') {
       status = 'approved';
-    } else if (ch.access_mode === 'request') {
-      status = 'pending';
     } else if (ch.access_mode === 'selected') {
       const { data: allow } = await service
         .from('channel_access')
@@ -112,21 +108,8 @@ export async function POST(request) {
         return NextResponse.json({ error: 'This channel is invite-only.' }, { status: 403 });
       }
       status = 'approved';
-    }
-  }
-
-  // Block duplicate pending requests for the same pair+channel
-  if (status === 'pending') {
-    const { data: existing } = await service
-      .from('connection_requests')
-      .select('id')
-      .eq('owner_id', owner.id)
-      .eq('requester_id', user.id)
-      .eq('channel_type', channel_type)
-      .eq('status', 'pending')
-      .maybeSingle();
-    if (existing) {
-      return NextResponse.json({ error: 'You already have a pending request for this channel.' }, { status: 409 });
+    } else {
+      return NextResponse.json({ error: 'That channel is not available.' }, { status: 400 });
     }
   }
 

@@ -37,7 +37,7 @@ export default function Home() {
         <div className="how-step">
           <div className="n">02</div>
           <h3>Set your contact rules</h3>
-          <p>Choose which channels are open, by request, or hidden. Change them anytime.</p>
+          <p>Choose which channels are open, invite-only, or hidden. Change them anytime.</p>
         </div>
         <div className="how-step">
           <div className="n">03</div>

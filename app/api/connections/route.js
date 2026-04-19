@@ -20,9 +20,6 @@ export async function POST(request) {
     return NextResponse.json({ error: 'owner_username is required.' }, { status: 400 });
   }
   const text = (message ?? '').trim();
-  if (!text) {
-    return NextResponse.json({ error: 'Please introduce yourself.' }, { status: 400 });
-  }
   if (text.length > MAX_MESSAGE) {
     return NextResponse.json({ error: `Message must be ${MAX_MESSAGE} characters or fewer.` }, { status: 400 });
   }
@@ -64,7 +61,7 @@ export async function POST(request) {
     requester_username: requesterProfile.username,
     owner_id: owner.id,
     owner_username: owner.username,
-    message: text,
+    message: text || null,
     status: 'pending',
     responded_at: null,
   };

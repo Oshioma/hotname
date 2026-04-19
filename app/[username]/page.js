@@ -81,7 +81,7 @@ export default async function ProfilePage({ params }) {
   // Decide which channels this viewer can see + which delivery mode applies.
   //   mode = 'direct'  → Public channel, message delivers immediately
   //   mode = 'allowed' → Invite channel and viewer is on the allowlist
-  //   mode = 'approval'→ Request channel — message creates a pending request
+  // Channels that aren't toggled (access_mode === 'hidden') never show.
   const channels = [];
   for (const ch of channelRows ?? []) {
     const meta = CHANNEL_META[ch.type];
@@ -92,8 +92,6 @@ export default async function ProfilePage({ params }) {
 
     if (ch.access_mode === 'open') {
       channels.push({ type: ch.type, mode: 'direct', value: safeValue });
-    } else if (ch.access_mode === 'request') {
-      channels.push({ type: ch.type, mode: 'approval' });
     } else if (ch.access_mode === 'selected' && viewerUsername) {
       const { data: access } = await service
         .from('channel_access')
@@ -110,14 +108,9 @@ export default async function ProfilePage({ params }) {
   );
 
   // The composer only offers channels Hotname can actually route a message
-  // through (WhatsApp / SMS / Email / Post), plus any channel in Request
-  // mode — a Request is a message to the owner asking for that channel's
-  // value. Everything else (Instagram, Website, Telegram, etc. when Public)
-  // just lives as a clickable chip above.
-  const composerChannels = channels.filter((c) => {
-    if (c.mode === 'approval') return true;
-    return CHANNEL_META[c.type]?.deliverable;
-  });
+  // through (WhatsApp / SMS / Email / Post). Everything else (Instagram,
+  // Website, Telegram, etc. when Public) just lives as a clickable chip above.
+  const composerChannels = channels.filter((c) => CHANNEL_META[c.type]?.deliverable);
 
   // 'In app' is virtual: always available, goes to the owner's Hotname
   // inbox. Prepend it so it's the default choice.
@@ -165,7 +158,7 @@ export default async function ProfilePage({ params }) {
       {channels.length > 0 && (() => {
         // Split by intent, not by 'has a link':
         //   Message → anything Hotname can route a message to (WhatsApp, SMS,
-        //             Email, Post, any Request-mode channel).
+        //             Email, Post).
         //   Links   → everything else (Instagram, Website, Telegram, Signal,
         //             Voice call, Booking) — places you go, not message to.
         const linkChannels = [];
@@ -173,7 +166,7 @@ export default async function ProfilePage({ params }) {
         for (const ch of channels) {
           const meta = CHANNEL_META[ch.type];
           if (!meta) continue;
-          if (meta.deliverable || ch.mode === 'approval') messageChannels.push(ch);
+          if (meta.deliverable) messageChannels.push(ch);
           else linkChannels.push(ch);
         }
 
@@ -253,7 +246,6 @@ export default async function ProfilePage({ params }) {
         ) : (
           <ConnectForm
             ownerUsername={profile.username}
-            ownerDisplayName={profile.display_name || profile.username}
             viewerLoggedIn={!!viewer}
             status={connectionStatus}
           />

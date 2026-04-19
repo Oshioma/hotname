@@ -3,18 +3,14 @@
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 
-const MAX = 500;
-
 /**
- * The gate. Visitors must request to connect with an intro message before
- * they can message the owner through any channel.
- *   status = null       → no connection, show intro form
+ * The gate. Visitors ask to connect before they can message the owner.
+ *   status = null       → no connection, show request button
  *   status = 'pending'  → waiting
- *   status = 'declined' → show a quieter form to try again
+ *   status = 'declined' → show a quieter retry
  */
-export default function ConnectForm({ ownerUsername, ownerDisplayName, viewerLoggedIn, status }) {
+export default function ConnectForm({ ownerUsername, viewerLoggedIn, status }) {
   const router = useRouter();
-  const [message, setMessage] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [sent, setSent] = useState(false);
@@ -26,14 +22,13 @@ export default function ConnectForm({ ownerUsername, ownerDisplayName, viewerLog
       router.push(`/login?next=${next}`);
       return;
     }
-    if (!message.trim()) return;
     setError('');
     setLoading(true);
     try {
       const res = await fetch('/api/connections', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ owner_username: ownerUsername, message: message.trim() }),
+        body: JSON.stringify({ owner_username: ownerUsername }),
       });
       let json = {};
       try { json = await res.json(); } catch { /* ignore */ }
@@ -60,34 +55,14 @@ export default function ConnectForm({ ownerUsername, ownerDisplayName, viewerLog
     );
   }
 
-  const isRetry = status === 'declined';
-
   return (
     <form className="request-form" onSubmit={handleSubmit}>
       <h3>Request to connect with @{ownerUsername}</h3>
-      <p className="hint">
-        Introduce yourself briefly. Once {ownerDisplayName.split(' ')[0] || '@' + ownerUsername} accepts, you can message them through the channels they&apos;ve opened.
-        {isRetry && ' Your previous request was declined — a new message gives it another chance.'}
-      </p>
 
       {error && <p className="error-msg">{error}</p>}
 
-      <div className="ch-detail-label">Your intro</div>
-      <textarea
-        rows={4}
-        placeholder="Hi, I'm …"
-        value={message}
-        onChange={(e) => setMessage(e.target.value.slice(0, MAX))}
-        required
-        disabled={!viewerLoggedIn}
-      />
-
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '10px' }}>
-        <span style={{ fontSize: '12px', color: 'var(--text-soft)' }}>
-          {message.length} / {MAX}
-          {!viewerLoggedIn && ' · sign in to send'}
-        </span>
-        <button className="btn-primary" type="submit" disabled={viewerLoggedIn && (loading || !message.trim())}>
+      <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '12px' }}>
+        <button className="btn-primary" type="submit" disabled={viewerLoggedIn && loading}>
           {!viewerLoggedIn ? 'Sign in to connect' : (loading ? 'Sending…' : 'Request to connect')}
         </button>
       </div>
