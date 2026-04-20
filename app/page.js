@@ -19,7 +19,7 @@ export default async function Home() {
 
       <section className="hero">
         <h1>
-          Your Hot<em>name</em>
+          Your hot<em>name</em>
           <br />is all they need.
         </h1>
         <p className="lede">
