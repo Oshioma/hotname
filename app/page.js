@@ -9,7 +9,7 @@ export default async function Home() {
 
   return (
     <>
-      <nav>
+      <nav className="nav-dark">
         <Link href="/"><Logo /></Link>
         <div className="nav-actions">
           <Link href="/login"><button className="btn-ghost">Log in</button></Link>
