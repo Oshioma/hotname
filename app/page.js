@@ -11,6 +11,9 @@ export default async function Home() {
     <>
       <nav className="nav-dark">
         <Link href="/"><Logo /></Link>
+        <span className="nav-tagline">
+          Share one name. Choose how you let people reach you without exposing anything!
+        </span>
         <div className="nav-actions">
           <Link href="/login"><button className="btn-ghost">Log in</button></Link>
           <Link href="/signup"><button className="btn-primary">Claim yours</button></Link>
@@ -22,9 +25,6 @@ export default async function Home() {
           Your hot<em>name</em>
           <br />is all they need.
         </h1>
-        <p className="lede">
-          Share one name. Choose how you let people reach you without exposing anything!
-        </p>
         <HomeSearch viewerLoggedIn={!!user} />
         <div className="cta">
           <Link href="/signup"><button className="btn-primary">Claim your Hotname</button></Link>
