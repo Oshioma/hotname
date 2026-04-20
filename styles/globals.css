@@ -619,7 +619,7 @@ nav {
   box-shadow: var(--shadow-1);
 }
 .identity-avatar {
-  width: 56px; height: 56px;
+  width: 72px; height: 72px;
   border-radius: 50%;
   background: var(--accent-soft);
   color: var(--accent-text);
@@ -627,19 +627,19 @@ nav {
   align-items: center;
   justify-content: center;
   font-weight: 600;
-  font-size: 20px;
+  font-size: 26px;
   letter-spacing: -0.01em;
   flex-shrink: 0;
 }
 .identity-main { flex: 1; min-width: 200px; }
 .identity-name {
-  font-size: 1.1rem;
+  font-size: 1.6rem;
   font-weight: 600;
-  letter-spacing: -0.01em;
-  margin-bottom: 2px;
+  letter-spacing: -0.015em;
+  margin-bottom: 4px;
 }
 .identity-handle {
-  font-size: 14px;
+  font-size: 16px;
   color: #3d7a72;
   font-family: ui-monospace, monospace;
   margin-bottom: 6px;
