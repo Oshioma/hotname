@@ -1460,3 +1460,76 @@ nav.nav-dark .btn-ghost:hover {
 }
 .formDraftNote button { background: none; border: 0; color: inherit; cursor: pointer; font: inherit; padding: 0; }
 .formDraftNote button:first-of-type { text-decoration: underline; }
+
+/* ─── HOME: claimed Hotnames column (app/page.js) ───
+   Huge on purpose: five cards fill the right side of the screen top to
+   bottom, the rest scroll inside the column. */
+.home-layout {
+  --claimed-gap: 12px;
+  --claimed-pad: 12px;
+  --claimed-nav: 72px; /* the dark top bar above the column */
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(320px, 34vw);
+  align-items: start;
+}
+.home-main { min-width: 0; }
+.claimed {
+  position: sticky;
+  top: 0;
+  height: calc(100vh - var(--claimed-nav));
+  height: calc(100dvh - var(--claimed-nav));
+  overflow-y: auto;
+  scroll-snap-type: y proximity;
+  padding: var(--claimed-pad) var(--claimed-pad) var(--claimed-pad) 0;
+  scrollbar-width: none;
+}
+.claimed::-webkit-scrollbar { display: none; }
+.claimed-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--claimed-gap);
+}
+.claimed-list li { scroll-snap-align: start; }
+.claimed-card {
+  display: flex;
+  align-items: center;
+  /* 5 per screen: (screen − top bar − padding − 4 gaps) ÷ 5 */
+  height: calc((100vh - var(--claimed-nav) - 2 * var(--claimed-pad) - 4 * var(--claimed-gap)) / 5);
+  height: calc((100dvh - var(--claimed-nav) - 2 * var(--claimed-pad) - 4 * var(--claimed-gap)) / 5);
+  min-height: 96px;
+  padding: 0 clamp(1.25rem, 2.5vw, 2.5rem);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  color: var(--text);
+  text-decoration: none;
+  font-size: clamp(2rem, 4.2vw, 4.25rem);
+  font-weight: 600;
+  letter-spacing: -0.04em;
+  line-height: 1;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  transition: border-color .15s, transform .12s, box-shadow .15s;
+}
+.claimed-card:hover,
+.claimed-card:focus-visible {
+  border-color: var(--accent);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(20,20,30,0.08);
+}
+.claimed-at { color: var(--accent); margin-right: 2px; }
+
+@media (max-width: 900px) {
+  .home-layout { grid-template-columns: 1fr; }
+  .claimed {
+    position: static;
+    height: auto;
+    overflow: visible;
+    padding: 0 1rem 3rem;
+  }
+  .claimed-card { height: 120px; font-size: clamp(2rem, 11vw, 3.25rem); }
+}
