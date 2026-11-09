@@ -115,6 +115,7 @@ export default function SettingsPage() {
               <label>Display name</label>
               <input
                 type="text"
+                name="display_name"
                 placeholder="Your name"
                 value={displayName}
                 onChange={(e) => setDisplayName(e.target.value)}
@@ -126,6 +127,7 @@ export default function SettingsPage() {
             <div className="field">
               <label>Status <span style={{ color: 'var(--text-soft)' }}>({bio.length}/{MAX_BIO})</span></label>
               <textarea
+                name="bio"
                 rows={2}
                 placeholder="Founder · Builder · Zanzibar / UK"
                 value={bio}
@@ -138,6 +140,7 @@ export default function SettingsPage() {
               <label>Location <span style={{ color: 'var(--text-soft)' }}>(optional)</span></label>
               <input
                 type="text"
+                name="location"
                 placeholder="City, Country"
                 value={location}
                 onChange={(e) => setLocation(e.target.value)}
@@ -149,6 +152,7 @@ export default function SettingsPage() {
               <label>Phone <span style={{ color: 'var(--text-soft)' }}>(E.164)</span></label>
               <input
                 type="tel"
+                name="phone_number"
                 placeholder="+447911123456"
                 value={phoneNumber}
                 onChange={(e) => setPhoneNumber(e.target.value)}

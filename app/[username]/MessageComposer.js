@@ -61,6 +61,12 @@ export default function MessageComposer({ ownerUsername, channels, recentStatuse
     }
   }
 
+  // Signed out: the button goes to login instead of submitting, so the
+  // message stays saved as a draft and is still here when they come back.
+  function goToLogin() {
+    router.push(`/login?next=${encodeURIComponent(`/${ownerUsername}`)}`);
+  }
+
   if (result) {
     return (
       <div className="sent-card">
@@ -78,7 +84,7 @@ export default function MessageComposer({ ownerUsername, channels, recentStatuse
   }
 
   return (
-    <form className="request-form" onSubmit={handleSubmit}>
+    <form id={`message-${ownerUsername}`} className="request-form" onSubmit={handleSubmit}>
       <h3>Send @{ownerUsername} a message</h3>
       <p className="hint">
         You never see their contact details — Hotname routes the message to the channel they&apos;ve opened.
@@ -110,6 +116,7 @@ export default function MessageComposer({ ownerUsername, channels, recentStatuse
 
       <div className="ch-detail-label" style={{ marginTop: '12px' }}>Message</div>
       <textarea
+        name="message"
         rows={3}
         placeholder={`Hi @${ownerUsername}…`}
         value={body}
@@ -123,13 +130,19 @@ export default function MessageComposer({ ownerUsername, channels, recentStatuse
           {viewerLoggedIn && (mode === 'direct' || mode === 'allowed') && ' · delivered right away'}
           {!viewerLoggedIn && ' · sign in to send'}
         </span>
-        <button
-          className="btn-primary"
-          type="submit"
-          disabled={viewerLoggedIn && (loading || !body.trim() || !channel)}
-        >
-          {!viewerLoggedIn ? 'Sign in to send' : (loading ? 'Sending…' : 'Send')}
-        </button>
+        {viewerLoggedIn ? (
+          <button
+            className="btn-primary"
+            type="submit"
+            disabled={loading || !body.trim() || !channel}
+          >
+            {loading ? 'Sending…' : 'Send'}
+          </button>
+        ) : (
+          <button className="btn-primary" type="button" onClick={goToLogin}>
+            Sign in to send
+          </button>
+        )}
       </div>
     </form>
   );
