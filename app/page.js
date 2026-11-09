@@ -1,12 +1,8 @@
 import Link from 'next/link';
 import Logo from '@/app/components/Logo';
 import HomeSearch from '@/app/HomeSearch';
-import { createClient } from '@/lib/supabase/server';
 
-export default async function Home() {
-  const supabase = await createClient();
-  const { data: { user } } = await supabase.auth.getUser();
-
+export default function Home() {
   return (
     <>
       <nav className="nav-dark">
@@ -23,7 +19,7 @@ export default async function Home() {
           Your hot<em>name</em>
           <br />is all they need.
         </h1>
-        <HomeSearch viewerLoggedIn={!!user} />
+        <HomeSearch />
         <div className="cta">
           <Link href="/signup"><button className="btn-primary">Claim your Hotname</button></Link>
         </div>
