@@ -110,10 +110,11 @@ function SignupForm() {
           This becomes your permanent handle — <strong>@{clean || 'yourname'}</strong>. You can&apos;t change it later, so choose one you&apos;ll want to keep.
         </p>
 
-        <form onSubmit={handleContinue}>
+        <form id="signup-handle" onSubmit={handleContinue}>
           <div className="signup-pick-input">
             <span className="at">@</span>
             <input
+              name="username"
               type="text"
               placeholder="yourname"
               value={username}
@@ -161,7 +162,7 @@ function SignupForm() {
 
       {error && <p className="error-msg">{error}</p>}
 
-      <form onSubmit={handleSignup}>
+      <form id="signup-details" onSubmit={handleSignup}>
         <div className="field">
           <label>Display name</label>
           <input

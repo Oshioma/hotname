@@ -82,7 +82,7 @@ export default function InlineSearch({ placeholder = 'Find a Hotname…', autoFo
 
   return (
     <div ref={containerRef} className="inline-search">
-      <form onSubmit={handleSubmit}>
+      <form onSubmit={handleSubmit} role="search">
         <div className="search-input">
           <span className="at">@</span>
           <input

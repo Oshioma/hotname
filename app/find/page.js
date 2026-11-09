@@ -83,7 +83,7 @@ export default function FindPage() {
           <h1>Find a Hotname</h1>
           <p className="sub">Search by @handle or name.</p>
 
-          <form onSubmit={handleSubmit}>
+          <form onSubmit={handleSubmit} role="search">
             <div className="search-input">
               <span className="at">@</span>
               <input

@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { ACCESS_MODES, ACCESS_LABEL } from '@/lib/channelMeta';
+import { clearFormDraft } from '@/app/components/FormDrafts';
 
 const MODE_ORDER = ['hidden', 'selected', 'open']; // display order, Off → Public
 
@@ -47,6 +48,8 @@ export default function ChannelRow({ channel, profileDefaults, onRefresh }) {
       let json = {};
       try { json = await res.json(); } catch { /* ignore */ }
       if (!res.ok) { setError(json.error || 'Failed to save.'); return false; }
+      // Saved — the typed value is safe on the server now.
+      if ('value' in updates) clearFormDraft(`channel-${channel.type}`);
       await onRefresh();
       return true;
     } catch { setError('Network error.'); return false; }
@@ -138,12 +141,13 @@ export default function ChannelRow({ channel, profileDefaults, onRefresh }) {
                                  '@username';
 
   return (
-    <div className={`ch-simple${channel.access_mode !== 'hidden' ? ' ch-simple-on' : ''}`}>
+    <div data-draft={`channel-${channel.type}`} className={`ch-simple${channel.access_mode !== 'hidden' ? ' ch-simple-on' : ''}`}>
       <div className="ch-simple-label">{channel.label}</div>
 
       <div className="ch-simple-value">
         {channel.kind === 'address' ? (
           <textarea
+            name="value"
             className="ch-simple-input ch-simple-textarea"
             rows={3}
             value={valueInput}
@@ -156,6 +160,7 @@ export default function ChannelRow({ channel, profileDefaults, onRefresh }) {
           />
         ) : (
           <input
+            name="value"
             className="ch-simple-input"
             value={valueInput}
             placeholder={placeholder}
@@ -217,6 +222,8 @@ export default function ChannelRow({ channel, profileDefaults, onRefresh }) {
             style={{ width: '100px', letterSpacing: '4px', textAlign: 'center' }}
             maxLength={6}
             placeholder="000000"
+            autoComplete="one-time-code"
+            data-no-draft
             value={codeInput}
             onChange={(e) => setCodeInput(e.target.value)}
           />
@@ -240,7 +247,7 @@ export default function ChannelRow({ channel, profileDefaults, onRefresh }) {
             </span>
           ))}
           {addError && <span className="ch-simple-error" style={{ width: '100%' }}>{addError}</span>}
-          <form onSubmit={handleAddUser} style={{ display: 'flex', gap: '6px', marginLeft: 'auto' }}>
+          <form onSubmit={handleAddUser} data-no-draft style={{ display: 'flex', gap: '6px', marginLeft: 'auto' }}>
             <div className="prefix">
               <span className="at">@</span>
               <input
